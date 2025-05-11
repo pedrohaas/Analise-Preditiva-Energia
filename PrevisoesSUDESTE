@@ -1,0 +1,423 @@
+import pandas as pd
+import numpy as np
+from prophet import Prophet
+from statsmodels.tsa.arima.model import ARIMA
+from statsmodels.tsa.statespace.sarimax import SARIMAX
+from statsmodels.tsa.seasonal import STL
+from sklearn.metrics import mean_absolute_error, mean_squared_error
+import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
+matplotlib.use('Agg')
+from scipy import stats
+
+def salvar_fig(path, dpi=300):
+    """Salva a figura atual em *path* e fecha a figura."""
+    plt.tight_layout()
+    plt.savefig(path, dpi=dpi, bbox_inches='tight')
+    plt.close()
+
+
+# Carregar os dados do arquivo Excel
+df = pd.read_excel("Historico_do_Preco_Medio_Mensal_-_janeiro_de_2001_a_abril_de_2025.xls")
+
+# Certificando-se de que a coluna 'MES' está no formato datetime
+df['MES'] = pd.to_datetime(df['MES'], format='%b-%y', errors='coerce')
+
+# Definindo a região
+region = 'SUDESTE'
+
+# Definindo as datas futuras para previsão (exemplo de 16 meses a partir de junho/2024)
+future_dates = pd.date_range(start='2024-06-01', periods=16, freq='M')
+
+# Configurando o estilo dos gráficos para português
+plt.rcParams['axes.titlesize'] = 14
+plt.rcParams['figure.figsize'] = (14, 8)
+plt.style.use('ggplot')
+
+# Função para detectar e tratar outliers
+def tratar_outliers(serie, metodo='zscore', limite=3.0):
+    """
+    Detecta e trata outliers em uma série temporal.
+    
+    Parâmetros:
+    - serie: Série temporal para tratamento
+    - metodo: 'zscore' (padrão) ou 'iqr' (intervalo interquartil)
+    - limite: Limite para considerar outlier (padrão: 3.0 para zscore, 1.5 para iqr)
+    
+    Retorna:
+    - Série sem outliers (valores substituídos pela mediana local)
+    """
+    serie_limpa = serie.copy()
+    
+    if metodo == 'zscore':
+        # Método Z-score
+        z_scores = np.abs(stats.zscore(serie))
+        outliers_indices = np.where(z_scores > limite)[0]
+    elif metodo == 'iqr':
+        # Método IQR (Intervalo Interquartil)
+        Q1 = serie.quantile(0.25)
+        Q3 = serie.quantile(0.75)
+        IQR = Q3 - Q1
+        outliers_indices = np.where((serie < (Q1 - limite * IQR)) | (serie > (Q3 + limite * IQR)))[0]
+    else:
+        raise ValueError("Método deve ser 'zscore' ou 'iqr'")
+    
+    # Tratar outliers substituindo pela mediana local (usando janela de 5 pontos)
+    janela = 5
+    for idx in outliers_indices:
+        inicio = max(0, idx - janela//2)
+        fim = min(len(serie), idx + janela//2 + 1)
+        vizinhanca = [val for i, val in enumerate(serie.iloc[inicio:fim]) if i + inicio != idx]
+        if vizinhanca:
+            serie_limpa.iloc[idx] = np.median(vizinhanca)
+    
+    # Contabilizar outliers
+    n_outliers = len(outliers_indices)
+    if n_outliers > 0:
+        print(f"  Detectados e tratados {n_outliers} outliers ({n_outliers/len(serie)*100:.1f}%)")
+    
+    return serie_limpa
+
+# Visualizar outliers
+def visualizar_outliers(df_original, df_tratado, region_name):
+    """
+    Gera um gráfico comparando a série original com a série tratada (sem outliers)
+    """
+    plt.figure(figsize=(14, 6))
+    
+    # Plotar série original
+    plt.plot(df_original.index, df_original, 'o-', alpha=0.7, label='Série Original', color='blue')
+    
+    # Destacar outliers
+    serie_original = df_original.iloc[:, 0]
+    serie_tratada = df_tratado.iloc[:, 0]
+    outliers_mask = serie_original != serie_tratada
+    
+    if outliers_mask.any():
+        outliers_indices = outliers_mask[outliers_mask].index
+        plt.scatter(outliers_indices, serie_original[outliers_indices], 
+                   color='red', s=100, marker='x', label='Outliers')
+        
+        # Plotar série tratada
+        plt.plot(df_tratado.index, df_tratado, 'o-', alpha=0.9, 
+                 label='Série Tratada', color='green')
+    
+    plt.title(f'Detecção de Outliers - {region_name}', fontsize=16)
+    plt.xlabel('Data', fontsize=12)
+    plt.ylabel('Preço Médio (R$)', fontsize=12)
+    plt.grid(True)
+    plt.legend()
+    plt.tight_layout()
+    salvar_fig(f'outliers_{region_name}.png')
+    plt.show()
+
+# Função para realizar previsões para uma dada série temporal
+def realizar_previsao(df_region, future_dates, tratar_outliers_flag=True):
+    """Realiza previsões utilizando diversos modelos
+    
+    Args:
+        df_region: DataFrame com série temporal
+        future_dates: Datas futuras para previsão
+        tratar_outliers_flag: Se True, realiza tratamento de outliers
+    """
+    # Tratar outliers, se solicitado
+    if tratar_outliers_flag:
+        df_region_tratado = pd.DataFrame(tratar_outliers(df_region.iloc[:, 0], 
+                                                         metodo='iqr', 
+                                                         limite=1.5))
+        df_region_tratado.index = df_region.index
+    else:
+        df_region_tratado = df_region.copy()
+    
+    # Prophet requer colunas 'ds' e 'y'
+    df_prophet = df_region_tratado.reset_index()
+    df_prophet.columns = ['ds', 'y']
+    df_prophet['ds'] = pd.to_datetime(df_prophet['ds'], errors='coerce')
+    df_prophet = df_prophet.dropna(subset=['ds'])
+
+    # Modelo Prophet
+    model_prophet = Prophet(yearly_seasonality=True, 
+                            weekly_seasonality=False, 
+                            daily_seasonality=False)
+    model_prophet.fit(df_prophet)
+
+    future_df = pd.DataFrame({'ds': future_dates})
+    forecast_prophet = model_prophet.predict(future_df)
+
+    # Modelo ARIMA
+    model_arima = ARIMA(df_region_tratado, order=(5, 1, 0))
+    model_arima_fit = model_arima.fit()
+    forecast_arima = model_arima_fit.forecast(steps=16)
+
+    # Modelo SARIMA (Seasonal ARIMA)
+    model_sarima = SARIMAX(df_region_tratado, 
+                          order=(5, 1, 0), 
+                          seasonal_order=(1, 1, 0, 12))
+    model_sarima_fit = model_sarima.fit(disp=False)
+    forecast_sarima = model_sarima_fit.forecast(steps=16)
+
+    # Decomposição STL (Seasonal-Trend decomposition using LOESS)
+    df_region_tratado = df_region_tratado.dropna()
+    df_region_tratado.index = pd.to_datetime(df_region_tratado.index, errors='coerce')
+    df_region_tratado = df_region_tratado.asfreq('MS')
+
+    seasonal_period = 13
+    if len(df_region_tratado) >= seasonal_period:
+        stl = STL(df_region_tratado, seasonal=seasonal_period, robust=True)  # robust=True para tratar outliers
+        result = stl.fit()
+        forecast_decomp = result.trend[-16:].copy()
+        forecast_decomp = forecast_decomp + result.seasonal[-16:]
+    else:
+        forecast_decomp = np.full(16, np.nan)
+
+    return forecast_prophet, forecast_arima, forecast_sarima, forecast_decomp, df_region_tratado
+
+# Preparando dados para a região SUDESTE
+print(f"Realizando previsões para a região: {region}")
+df_region = df[['MES', region]].dropna().set_index('MES')
+region_dataframe_original = df_region  # Salvar original para uso na plotagem
+
+# Realizar previsões com tratamento de outliers
+forecast_prophet, forecast_arima, forecast_sarima, forecast_decomp, df_region_tratado = realizar_previsao(df_region, future_dates)
+region_dataframe_tratado = df_region_tratado  # Salvar versão tratada
+
+# Visualizar outliers detectados
+visualizar_outliers(df_region, df_region_tratado, region)
+
+# Armazenando os resultados para a região
+forecast_results = {
+    'prophet': forecast_prophet,
+    'arima': forecast_arima,
+    'sarima': forecast_sarima,
+    'decomp': forecast_decomp
+}
+
+# Função para imprimir os valores previstos
+def imprimir_previsoes():
+    """
+    Imprime os valores previstos para cada modelo em formato tabular
+    """
+    # Cabeçalho
+    print(f"\n===== PREVISÕES NUMÉRICAS PARA {region} =====")
+    
+    # Criar um DataFrame para facilitar a visualização
+    data = {
+        'Data': future_dates.strftime('%b/%Y'),
+        'Prophet': forecast_results['prophet']['yhat'].values,
+        'IC Inferior': forecast_results['prophet']['yhat_lower'].values,
+        'IC Superior': forecast_results['prophet']['yhat_upper'].values,
+        'ARIMA': forecast_results['arima'].values,
+        'SARIMA': forecast_results['sarima'].values,
+        'STL': forecast_results['decomp'].values
+    }
+    
+    df_forecast = pd.DataFrame(data)
+    
+    # Formatando os valores numéricos para 2 casas decimais
+    for col in df_forecast.columns:
+        if col != 'Data':
+            df_forecast[col] = df_forecast[col].map(lambda x: f'R$ {x:.2f}' if pd.notnull(x) else 'N/A')
+    
+    # Exibir a tabela de previsões
+    print(df_forecast.to_string(index=False))
+    print("\n")
+    
+    return df_forecast
+
+# Função para validar os modelos usando período passado
+def validar_modelos_periodo_passado(df_region, periodo_teste=5):
+    """
+    Valida os modelos usando os últimos meses disponíveis como período de teste.
+    Inclui tratamento de outliers antes da modelagem.
+    """
+    # Verificar se temos dados suficientes
+    if len(df_region) <= periodo_teste:
+        print(f"Dados insuficientes para a região {region} para validação")
+        return None
+    
+    # Separar dados de treino e teste
+    df_treino = df_region.iloc[:-periodo_teste]
+    df_teste = df_region.iloc[-periodo_teste:]
+    
+    # Definir datas futuras como sendo as datas do período de teste
+    datas_teste = df_teste.index
+    
+    try:
+        # Realizar previsões usando apenas dados de treino (com tratamento de outliers)
+        forecast_prophet, forecast_arima, forecast_sarima, forecast_decomp, df_treino_tratado = realizar_previsao(df_treino, datas_teste)
+        
+        # Calcular métricas de erro
+        true_values = df_teste.iloc[:, 0]  # Primeira coluna contém os valores
+        
+        # Corrigir tamanhos para garantir mesma dimensão
+        # Para Prophet, pegar apenas os valores previstos (yhat)
+        prophet_values = forecast_prophet['yhat'].values[:len(true_values)]
+        
+        # Para ARIMA, SARIMA e STL, limitar ao tamanho dos valores reais
+        arima_values = forecast_arima.values[:len(true_values)]
+        sarima_values = forecast_sarima.values[:len(true_values)]
+        
+        # Para STL, verificar se temos valores válidos
+        if isinstance(forecast_decomp, pd.Series):
+            decomp_values = forecast_decomp.values[:len(true_values)]
+        else:
+            decomp_values = forecast_decomp[:len(true_values)]
+        
+        # Verificar se todos têm o mesmo tamanho
+        if len(true_values) != len(prophet_values) or len(true_values) != len(arima_values) or len(true_values) != len(sarima_values) or len(true_values) != len(decomp_values):
+            print(f"ERRO: Dimensões diferentes para região {region}")
+            print(f"  True values: {len(true_values)}")
+            print(f"  Prophet: {len(prophet_values)}")
+            print(f"  ARIMA: {len(arima_values)}")
+            print(f"  SARIMA: {len(sarima_values)}")
+            print(f"  STL: {len(decomp_values)}")
+            return None
+        
+        # Métricas de erro para Prophet
+        mae_prophet = mean_absolute_error(true_values, prophet_values)
+        mse_prophet = mean_squared_error(true_values, prophet_values)
+        rmse_prophet = np.sqrt(mse_prophet)
+        
+        # Métricas de erro para ARIMA
+        mae_arima = mean_absolute_error(true_values, arima_values)
+        mse_arima = mean_squared_error(true_values, arima_values)
+        rmse_arima = np.sqrt(mse_arima)
+        
+        # Métricas de erro para SARIMA
+        mae_sarima = mean_absolute_error(true_values, sarima_values)
+        mse_sarima = mean_squared_error(true_values, sarima_values)
+        rmse_sarima = np.sqrt(mse_sarima)
+        
+        # Métricas de erro para STL
+        mae_decomp = mean_absolute_error(true_values, decomp_values)
+        mse_decomp = mean_squared_error(true_values, decomp_values)
+        rmse_decomp = np.sqrt(mse_decomp)
+        
+        print(f"\nErros de validação para a região {region} (últimos {periodo_teste} meses):")
+        print(f"Prophet: MAE={mae_prophet:.2f}, MSE={mse_prophet:.2f}, RMSE={rmse_prophet:.2f}")
+        print(f"ARIMA: MAE={mae_arima:.2f}, MSE={mse_arima:.2f}, RMSE={rmse_arima:.2f}")
+        print(f"SARIMA: MAE={mae_sarima:.2f}, MSE={mse_sarima:.2f}, RMSE={rmse_sarima:.2f}")
+        print(f"STL: MAE={mae_decomp:.2f}, MSE={mse_decomp:.2f}, RMSE={rmse_decomp:.2f}")
+        
+        # Plotar os resultados da validação
+        plt.figure(figsize=(14, 8))
+        plt.plot(df_teste.index, true_values, 'o-', linewidth=2, label='Valores Reais', color='blue')
+        plt.plot(df_teste.index, prophet_values, '--', linewidth=2, label='Prophet', color='red')
+        plt.plot(df_teste.index, arima_values, '--', linewidth=2, label='ARIMA', color='green')
+        plt.plot(df_teste.index, sarima_values, '--', linewidth=2, label='SARIMA', color='purple')
+        plt.plot(df_teste.index, decomp_values, '--', linewidth=2, label='STL', color='orange')
+        
+        plt.title(f'Validação para Região {region} - Últimos {periodo_teste} Meses', fontsize=16)
+        plt.xlabel('Data', fontsize=12)
+        plt.ylabel('Preço Médio (R$)', fontsize=12)
+        plt.grid(True)
+        plt.legend()
+        plt.tight_layout()
+        salvar_fig(f'validacao_{region}.png')
+        plt.show()
+        
+        return {
+            'prophet': (mae_prophet, mse_prophet, rmse_prophet),
+            'arima': (mae_arima, mse_arima, rmse_arima),
+            'sarima': (mae_sarima, mse_sarima, rmse_sarima),
+            'stl': (mae_decomp, mse_decomp, rmse_decomp)
+        }
+    except Exception as e:
+        print(f"Erro ao validar região {region}: {str(e)}")
+        return None
+
+# Validar os modelos para a região SUDESTE com os últimos 5 meses
+print("\n=== Validação dos Modelos com Dados Históricos (após tratamento de outliers) ===")
+validation_results = validar_modelos_periodo_passado(region_dataframe_tratado)
+
+# Plotando as previsões futuras para a região SUDESTE
+def plotar_previsoes_futuras():
+    plt.figure(figsize=(14, 8))
+    
+    # Obter dataframe da região SUDESTE (dados originais e tratados)
+    df_region_original = region_dataframe_original
+    df_region_tratado = region_dataframe_tratado
+    
+    # Plotar dados históricos originais e tratados (últimos 36 meses para melhor visualização)
+    ultimo_ano_original = df_region_original.iloc[-36:]
+    ultimo_ano_tratado = df_region_tratado.iloc[-36:]
+    
+    plt.plot(ultimo_ano_original.index, ultimo_ano_original, 'o-', linewidth=1.5, 
+             label='Dados Históricos (Original)', color='blue', alpha=0.4)
+    plt.plot(ultimo_ano_tratado.index, ultimo_ano_tratado, 'o-', linewidth=2, 
+             label='Dados Históricos (Tratados)', color='darkblue')
+    
+    # Plotar previsões
+    plt.plot(future_dates, forecast_results['prophet']['yhat'], '--', linewidth=2, label='Prophet', color='red')
+    plt.plot(future_dates, forecast_results['arima'], '--', linewidth=2, label='ARIMA', color='green')
+    plt.plot(future_dates, forecast_results['sarima'], '--', linewidth=2, label='SARIMA', color='purple')
+    plt.plot(future_dates, forecast_results['decomp'], '--', linewidth=2, label='Decomposição STL', color='orange')
+    
+    # Adicionar intervalos de confiança para Prophet
+    plt.fill_between(future_dates, 
+                     forecast_results['prophet']['yhat_lower'], 
+                     forecast_results['prophet']['yhat_upper'], 
+                     color='red', alpha=0.2, label='IC Prophet 95%')
+    
+    # Adicionar informações ao gráfico
+    titulo = f'Previsões de Preço Médio de Energia - Região {region}'
+    
+    plt.title(titulo, fontsize=16)
+    plt.xlabel('Data', fontsize=12)
+    plt.ylabel('Preço Médio (R$)', fontsize=12)
+    plt.grid(True)
+    plt.legend()
+    
+    # Formatar datas no eixo x para melhor visualização
+    plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%b/%Y'))
+    plt.gca().xaxis.set_major_locator(mdates.MonthLocator(interval=3))
+    plt.gcf().autofmt_xdate()
+    
+    plt.tight_layout()
+    salvar_fig(f'previsoes_{region}.png')
+    plt.show()
+    
+    # Imprimir os valores previstos para esta região
+    imprimir_previsoes()
+
+# Plotar previsões para a região SUDESTE
+print("\n=== Plotando Previsões Futuras e Imprimindo Valores (após tratamento de outliers) ===")
+plotar_previsoes_futuras()
+
+# Relatório final com o melhor modelo para a região SUDESTE
+print("\n=== Relatório de Melhor Modelo para Região SUDESTE ===")
+if validation_results:
+    # Obter os RMSE de cada modelo
+    rmse_values = {
+        'Prophet': validation_results['prophet'][2],
+        'ARIMA': validation_results['arima'][2],
+        'SARIMA': validation_results['sarima'][2],
+        'STL': validation_results['stl'][2]
+    }
+    
+    # Encontrar o melhor modelo (menor RMSE)
+    melhor_modelo = min(rmse_values, key=rmse_values.get)
+    menor_rmse = rmse_values[melhor_modelo]
+    
+    print(f"Região {region}: Melhor modelo é {melhor_modelo} com RMSE = {menor_rmse:.2f}")
+
+# Salvar resultados em arquivo CSV
+print("\n=== Salvando resultados em arquivo CSV ===")
+
+# Criar dataframe de previsões
+data = {
+    'Data': future_dates.strftime('%Y-%m-%d'),
+    'Prophet': forecast_results['prophet']['yhat'].values,
+    'Prophet_Lower': forecast_results['prophet']['yhat_lower'].values,
+    'Prophet_Upper': forecast_results['prophet']['yhat_upper'].values,
+    'ARIMA': forecast_results['arima'].values,
+    'SARIMA': forecast_results['sarima'].values,
+    'STL': forecast_results['decomp'].values
+}
+
+df_forecast = pd.DataFrame(data)
+
+# Salvar em CSV
+filename = f"previsoes_{region}.csv"
+df_forecast.to_csv(filename, index=False)
+print(f"Arquivo {filename} salvo com sucesso!")
