@@ -247,14 +247,16 @@ document.addEventListener('DOMContentLoaded', function() {
         const insightList = document.createElement('ul');
         data.insights.forEach(insightText => {
             const listItem = document.createElement('li');
-            listItem.textContent = insightText;
+            // --- CORREÇÃO APLICADA AQUI ---
+            // Usamos .innerHTML para que o navegador interprete as tags <strong>
+            listItem.innerHTML = insightText; 
             insightList.appendChild(listItem);
         });
         container.appendChild(insightList);
         
     } catch (error) {
         console.error("Erro ao carregar insights da IA:", error);
-        container.innerHTML = '<p>Não foi possível carregar os insights gerados pela IA. Por favor, execute o script de geração de dados novamente.</p>';
+        container.innerHTML = '<p>Não foi possível carregar os insights gerados pela IA. Verifique se o script de geração foi executado com sucesso e se a chave de API está configurada.</p>';
     }
 }
 });

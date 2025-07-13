@@ -171,11 +171,11 @@ def criar_arvore_decisao_alternativas(df_dist):
     plt.savefig(filepath); plt.close()
     print(f"Imagem da Árvore Comparativa salva: {filepath}")
 
-def gerar_insights_com_ia(dados_validacao, dados_arvore):
+def gerar_insights_com_ia(dados_validacao, dados_arvore, dados_previsao_futura):
     """
-    Consolida os dados, cria um prompt sofisticado e chama a API do Gemini para gerar insights.
+    Consolida TODAS as análises, cria um prompt estratégico e chama a API do Gemini.
     """
-    print("\n--- Gerando Insights com a IA do Gemini ---")
+    print("\n--- Gerando Insights Estratégicos com a IA do Gemini ---")
     
     try:
         # Configuração da API
@@ -187,37 +187,42 @@ def gerar_insights_com_ia(dados_validacao, dados_arvore):
         genai.configure(api_key=GOOGLE_API_KEY)
         model = genai.GenerativeModel('gemini-2.5-pro')
 
-        # --- CORREÇÃO NO CONTEXTO: Enviar um quadro mais completo de métricas ---
+        # --- CONTEXTO HOLÍSTICO: Fornecer um resumo de todas as análises ---
         sudeste_metrics = dados_validacao['sudeste']['metrics']
         
-        # Função auxiliar para formatar as métricas de forma segura
         def format_metric(model_name, metric_name):
             value = sudeste_metrics.get(model_name, {}).get(metric_name)
             return f"{value:.2f}" if value is not None else "N/A"
 
         contexto = f"""
-        Dados da Análise de Decisão e Previsão de Preços de Energia:
-        1. Análise de Decisão Histórica (Árvore de Decisão):
-           - Melhor alternativa de recolhimento de palhiço (baseado em dados passados): {dados_arvore['melhor_alternativa']}
-           - Valor Monetário Esperado: R$ {dados_arvore['maior_receita']:,.2f}
+        Resumo das Análises para Tomada de Decisão Estratégica na Geração de Energia:
 
-        2. Validação dos Modelos Preditivos (Região Sudeste):
-           - Prophet: MAE={format_metric('Prophet', 'MAE')}, RMSE={format_metric('Prophet', 'RMSE')}
-           - ARIMA:   MAE={format_metric('ARIMA', 'MAE')}, RMSE={format_metric('ARIMA', 'RMSE')}
-           - SARIMA:  MAE={format_metric('SARIMA', 'MAE')}, RMSE={format_metric('SARIMA', 'RMSE')} (Nota: Este modelo é especialista em sazonalidade)
+        1. ANÁLISE HISTÓRICA (Baseada em probabilidades passadas):
+           - Análise da Árvore de Decisão para métodos de recolhimento de palhiço de cana.
+           - Melhor alternativa histórica: '{dados_arvore['melhor_alternativa']}', com um Valor Monetário Esperado de R$ {dados_arvore['maior_receita']:,.2f}.
+
+        2. ANÁLISE PREDITIVA (Baseada em previsões para os próximos 16 meses na região Sudeste):
+           - Validação dos Modelos: O modelo SARIMA apresentou o melhor equilíbrio, com MAE de {format_metric('SARIMA', 'MAE')} e RMSE de {format_metric('SARIMA', 'RMSE')}, sendo o mais recomendado por capturar bem a sazonalidade.
+           - Previsão Futura (Modelo SARIMA): A média dos preços previstos para os próximos 16 meses é de R$ {dados_previsao_futura['media_preco_sarima']:.2f}/MWh.
+
+        3. SIMULAÇÃO DE INVESTIMENTO (Payback da Usina de Palhiço):
+           - Custo do Investimento (exemplo): R$ 310.000
+           - Usando o preço médio futuro previsto pelo SARIMA (R$ {dados_previsao_futura['media_preco_sarima']:.2f}), o tempo de retorno (payback) do investimento seria de aproximadamente {dados_previsao_futura['payback_meses']} meses para um consumo de 540 MWh/mês.
         """
-        prompt = f"""
-        Você é um consultor sênior de energia, conhecido por suas análises criteriosas. Seu público é a diretoria de uma usina.
-        Com base no contexto a seguir, escreva um sumário executivo em 4 tópicos.
 
-        Sua tarefa é analisar as métricas de validação dos modelos. Considere o trade-off: um MAE baixo indica boa acurácia média, enquanto um RMSE baixo indica poucos erros extremos.
-        Pondere também a vantagem estrutural do modelo SARIMA em capturar sazonalidade, que é visualmente importante para este problema.
-        Com base nesta análise multifatorial, recomende o modelo preditivo mais confiável para a tomada de decisão.
+        # --- PROMPT ESTRATÉGICO FINAL ---
+        prompt = f"""
+        Você é um consultor sênior de energia e estratégia, preparando um sumário executivo final para a diretoria de uma usina.
+        Seu papel é sintetizar todas as análises (histórica, preditiva e de simulação) em recomendações estratégicas de alto nível.
+        Vá além da simples escolha de um modelo. Fale sobre oportunidades, riscos e como as diferentes análises se conectam.
+        
+        Com base no contexto completo a seguir, escreva um relatório conciso em 4 tópicos.
+        **Use as tags <strong> e </strong> para destacar os termos mais importantes.**
 
         Contexto da Análise:
         {contexto}
 
-        Forneça sua resposta estritamente no formato JSON, com uma chave "titulo" e uma chave "insights" que é uma lista de 4 strings.
+        Forneça sua resposta estritamente no formato JSON, com uma chave "titulo" e uma chave "insights" que é uma lista de 4 strings (contendo as tags <strong>).
         """
 
         safety_config = {
@@ -234,14 +239,13 @@ def gerar_insights_com_ia(dados_validacao, dados_arvore):
         with open(filepath, 'w', encoding='utf-8') as f:
             json.dump(insights_data, f, ensure_ascii=False, indent=4)
         
-        print(f"Insights da IA (versão refinada) salvos com sucesso em: {filepath}")
+        print(f"Insights estratégicos da IA salvos com sucesso em: {filepath}")
 
-    except json.JSONDecodeError:
-        print(f"\nERRO CRÍTICO: A API do Gemini retornou uma resposta que não é um JSON válido, mesmo após a limpeza.")
-        print("Resposta recebida (bruta):", response.text)
     except Exception as e:
         print(f"\nERRO ao gerar insights com a IA: {e}")
-        print("A geração de insights será ignorada.")
+
+
+
 # --- FUNÇÃO PRINCIPAL ---
 def main():
     """Orquestra a geração de todos os ativos estáticos para o site."""
@@ -287,6 +291,13 @@ def main():
     criar_arvore_horizontal_classes(df_dist,  forma_recolhimento='Colheita integral', producao_excedente=70000)
     criar_arvore_horizontal_classes(df_dist, forma_recolhimento='Enfardamento', producao_excedente=80000)
     criar_arvore_horizontal_classes(df_dist, forma_recolhimento='Colheita parcial', producao_excedente=37500)
+    
+    # Coleta os dados da árvore de decisão para a IA
+    alternativas_arvore = {'Enfardamento': 80000, 'Colheita integral': 70000, 'Colheita parcial': 37500}
+    receitas_esperadas = {nome: (df_dist['Frequência']/100 * df_dist['Ponto médio'] * producao).sum() for nome, producao in alternativas_arvore.items()}
+    melhor_alternativa_arvore = max(receitas_esperadas, key=receitas_esperadas.get)
+    maior_receita_arvore = receitas_esperadas[melhor_alternativa_arvore]
+    dados_arvore_para_ia = {"melhor_alternativa": melhor_alternativa_arvore, "maior_receita": maior_receita_arvore}
     criar_arvore_decisao_alternativas(df_dist)
 
 
@@ -294,6 +305,7 @@ def main():
     regioes = ['SUDESTE', 'SUL', 'NORDESTE', 'NORTE']
     future_dates = pd.date_range(start='2024-06-01', periods=16, freq='M')
     all_validation_metrics = {}
+    dados_previsao_futura_para_ia = {} # Dicionário para guardar os dados para a IA
 
     for region in regioes:
         print(f"\n--- Processando Região para Previsão e Validação: {region} ---")
@@ -304,50 +316,40 @@ def main():
         
         train_data, test_data = df_tratado[:-5], df_tratado[-5:]
         
-        # Prophet
         prophet_val = Prophet(yearly_seasonality=True, weekly_seasonality=False, daily_seasonality=False).fit(train_data.reset_index().rename(columns={'MES': 'ds', region: 'y'}))
         prophet_pred = prophet_val.predict(test_data.reset_index().rename(columns={'MES': 'ds'}))['yhat'].values
-        
-        # ARIMA
         arima_val = ARIMA(train_data[region], order=(5,1,0)).fit()
         arima_pred = arima_val.forecast(steps=5)
-
-        # SARIMA
         sarima_val = SARIMAX(train_data[region], order=(5,1,0), seasonal_order=(1,1,0,12)).fit(disp=False)
         sarima_pred = sarima_val.forecast(steps=5)
-
-        # Bloco try-except para o STL Forecast para garantir compatibilidade
+        
         try:
             stl_result = STL(train_data[region].asfreq('MS'), seasonal=13).fit()
             stl_pred = stl_result.forecast(5)
         except AttributeError:
             print(f"AVISO: A versão do statsmodels instalada não suporta 'STL.forecast()'. A validação para o modelo STL será ignorada.")
-            stl_pred = np.full(5, np.nan) # Cria um array de NaNs se a função falhar
+            stl_pred = np.full(5, np.nan)
 
-        # Função auxiliar para calcular métricas de forma segura
         def calculate_metrics(y_true, y_pred):
-            if np.isnan(y_pred).any():
-                return {'MAE': None, 'MSE': None, 'RMSE': None}
-            return {
-                'MAE': mean_absolute_error(y_true, y_pred),
-                'MSE': mean_squared_error(y_true, y_pred),
-                'RMSE': np.sqrt(mean_squared_error(y_true, y_pred))
-            }
+            if np.isnan(y_pred).any(): return {'MAE': None, 'MSE': None, 'RMSE': None}
+            return {'MAE': mean_absolute_error(y_true, y_pred), 'MSE': mean_squared_error(y_true, y_pred), 'RMSE': np.sqrt(mean_squared_error(y_true, y_pred))}
 
         metrics = {
-            'Prophet': calculate_metrics(test_data[region], prophet_pred),
-            'ARIMA': calculate_metrics(test_data[region], arima_pred),
-            'SARIMA': calculate_metrics(test_data[region], sarima_pred),
-            'STL': calculate_metrics(test_data[region], stl_pred),
+            'Prophet': calculate_metrics(test_data[region], prophet_pred), 'ARIMA': calculate_metrics(test_data[region], arima_pred),
+            'SARIMA': calculate_metrics(test_data[region], sarima_pred), 'STL': calculate_metrics(test_data[region], stl_pred),
         }
-
-        all_validation_metrics[region.lower()] = {
-            'outliers_count': num_outliers,
-            'outliers_percentage': round((num_outliers / len(df_region)) * 100, 2),
-            'metrics': metrics
-        }
+        all_validation_metrics[region.lower()] = {'outliers_count': num_outliers, 'outliers_percentage': round((num_outliers / len(df_region)) * 100, 2), 'metrics': metrics}
         
         prophet_full, arima_full, sarima_full, df_tratado_full = realizar_previsao(df_region, future_dates, region)
+        
+        # Coleta os dados de previsão futura para a IA (apenas para a região de referência, Sudeste)
+        if region == 'SUDESTE':
+            media_preco_sarima = np.mean(sarima_full)
+            custo_investimento_exemplo = 310000
+            consumo_mensal_exemplo = 540
+            payback_meses_exemplo = custo_investimento_exemplo / (media_preco_sarima * consumo_mensal_exemplo)
+            dados_previsao_futura_para_ia = {'media_preco_sarima': media_preco_sarima, 'payback_meses': payback_meses_exemplo}
+
         plotar_decomposicao_stl(df_tratado_full[region], region)
         forecasts = {'prophet': prophet_full, 'arima': arima_full, 'sarima': sarima_full}
         visualizar_outliers(df_region, df_tratado_full, region)
@@ -363,15 +365,11 @@ def main():
     with open(validation_filepath, 'w', encoding='utf-8') as f:
         json.dump(all_validation_metrics, f, ensure_ascii=False, indent=4)
     print(f"\nArquivo com métricas de validação salvo: {validation_filepath}")
-    print("\n[SUCESSO] Geração de todos os dados estáticos concluída!")
+    
+    # --- Bloco 3: CHAMADA FINAL PARA A IA COM TODOS OS DADOS CONSOLIDADOS ---
+    gerar_insights_com_ia(all_validation_metrics, dados_arvore_para_ia, dados_previsao_futura_para_ia)
 
-    # Prepara os dados para a IA
-    dados_arvore_para_ia = {
-        "melhor_alternativa": "Enfardamento", # Extraído da análise
-        "maior_receita": 13137340.00 # Extraído da análise
-    }
-    gerar_insights_com_ia(all_validation_metrics, dados_arvore_para_ia)
     print("\n[SUCESSO] Geração de todos os dados estáticos concluída!")
-
+    
 if __name__ == '__main__':
     main()
