@@ -89,3 +89,52 @@ footer { background-color: #343a40; color: #e9ecef; padding-top: 3rem; padding-b
 .lightbox-close { position: absolute; top: 20px; right: 35px; color: #f1f1f1; font-size: 40px; font-weight: bold; cursor: pointer; transition: color 0.3s ease; }
 .lightbox-close:hover { color: #bbb; }
 @keyframes zoomIn { from { transform: scale(0.8); } to { transform: scale(1); } }
+
+/* --- 9. Estilos para o Seletor de Região --- */
+
+#region-selector {
+    text-align: center;
+    background: var(--card-background);
+    padding: 2rem;
+    border-radius: 12px;
+    margin-bottom: 3rem;
+    box-shadow: var(--shadow);
+}
+
+#region-selector h3 {
+    margin-top: 0;
+    margin-bottom: 1.5rem;
+    color: var(--heading-color);
+}
+
+.region-buttons {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.region-btn {
+    padding: 0.8rem 1.5rem;
+    font-size: 1rem;
+    font-family: var(--font-heading);
+    border: 2px solid var(--border-color);
+    background-color: transparent;
+    color: var(--text-color);
+    border-radius: 50px; /* Botões arredondados */
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.region-btn:hover {
+    background-color: #eef7f9;
+    border-color: var(--secondary-color);
+}
+
+/* Estilo do botão ativo */
+.region-btn.active {
+    background-color: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+    transform: scale(1.05);
+}

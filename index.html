@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard de Análise Preditiva | Preços de Energia</title>
+    <title>Dashboard Interativo de Análise Preditiva | Preços de Energia</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700&family=Poppins:wght@500;700&display=swap" rel="stylesheet">
@@ -18,13 +18,23 @@
     </header>
 
     <main class="container">
+        <section id="region-selector">
+            <h3>Selecione uma Região para Análise</h3>
+            <div class="region-buttons">
+                <button class="region-btn active" data-region="sudeste">Sudeste</button>
+                <button class="region-btn" data-region="sul">Sul</button>
+                <button class="region-btn" data-region="nordeste">Nordeste</button>
+                <button class="region-btn" data-region="norte">Norte</button>
+            </div>
+        </section>
+
         <section class="analysis-step">
-            <h2>Passo 1: Preparação e Limpeza dos Dados</h2>
+            <h2 id="outliers-title">Passo 1: Preparação dos Dados (Região Sudeste)</h2>
             <p class="section-intro">
                 A qualidade de uma previsão depende diretamente da qualidade dos dados históricos. O primeiro passo crucial foi identificar e tratar os "outliers" – valores atípicos que podem distorcer a análise. Utilizamos o método IQR (Intervalo Interquartil) para detectar esses pontos e os substituímos pela mediana de seus vizinhos, garantindo uma série temporal mais estável e representativa.
             </p>
             <div class="result-card">
-                <h3>Detecção e Tratamento de Outliers (Região Sudeste)</h3>
+                <h3 id="outliers-card-title">Detecção e Tratamento de Outliers</h3>
                 <img id="outliersChart" class="expandable-image" src="static/images/outliers_sudeste.png" alt="Gráfico de Detecção de Outliers">
                 <small>Clique na imagem para expandir.</small>
             </div>
