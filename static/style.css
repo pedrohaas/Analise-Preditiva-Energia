@@ -180,4 +180,69 @@ tbody tr:hover {
     .result-card {
         padding: 1.5rem;
     }
+
+    /* --- 6. Estilos do Rodapé Detalhado --- */
+
+footer {
+    background-color: #343a40; /* Um cinza mais escuro para o rodapé */
+    color: #e9ecef;
+    padding-top: 3rem;
+    padding-bottom: 0;
+    margin-top: 3rem;
+}
+
+.footer-content {
+    display: flex;
+    flex-wrap: wrap; /* Permite que os itens quebrem a linha em telas menores */
+    justify-content: space-between;
+    gap: 2rem;
+    padding-bottom: 2rem;
+}
+
+.footer-section {
+    flex: 1;
+    min-width: 250px; /* Largura mínima para cada seção antes de quebrar a linha */
+}
+
+.footer-section h4 {
+    font-family: var(--font-heading);
+    color: white;
+    margin-bottom: 1rem;
+    position: relative;
+    padding-bottom: 0.5rem;
+}
+
+/* Linha sutil abaixo dos títulos do rodapé */
+.footer-section h4::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 40px;
+    height: 2px;
+    background-color: var(--secondary-color);
+}
+
+.footer-section p {
+    margin-bottom: 0.5rem;
+}
+
+.footer-section a {
+    color: #ced4da;
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.footer-section a:hover {
+    color: white;
+    text-decoration: underline;
+}
+
+.footer-bottom {
+    background-color: #212529; /* Ainda mais escuro para a barra final */
+    text-align: center;
+    padding: 1rem 0;
+    font-size: 0.9rem;
+    color: #6c757d;
+}
 }
