@@ -173,82 +173,75 @@ def criar_arvore_decisao_alternativas(df_dist):
 
 def gerar_insights_com_ia(dados_validacao, dados_arvore):
     """
-    Consolida os dados, cria um prompt e chama a API do Gemini para gerar insights.
+    Consolida os dados, cria um prompt sofisticado e chama a API do Gemini para gerar insights.
     """
     print("\n--- Gerando Insights com a IA do Gemini ---")
     
     try:
-        # Configura a API usando a variável de ambiente
+        # Configuração da API
         GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY')
         if not GOOGLE_API_KEY:
-            print("AVISO: Chave de API do Google não encontrada na variável de ambiente GOOGLE_API_KEY.")
-            print("A geração de insights com IA será ignorada.")
+            print("AVISO: Chave de API do Google não encontrada. A geração de insights com IA será ignorada.")
             return
 
         genai.configure(api_key=GOOGLE_API_KEY)
         model = genai.GenerativeModel('gemini-2.5-pro')
 
-        # Consolida os dados mais relevantes para o prompt
+        # --- CORREÇÃO NO CONTEXTO: Enviar um quadro mais completo de métricas ---
         sudeste_metrics = dados_validacao['sudeste']['metrics']
-        # Encontra o melhor modelo de forma segura, ignorando valores nulos
-        valid_models = {m: sudeste_metrics[m]['RMSE'] for m in sudeste_metrics if sudeste_metrics[m]['RMSE'] is not None}
-        melhor_modelo_preditivo = min(valid_models, key=valid_models.get) if valid_models else "N/A"
         
+        # Função auxiliar para formatar as métricas de forma segura
+        def format_metric(model_name, metric_name):
+            value = sudeste_metrics.get(model_name, {}).get(metric_name)
+            return f"{value:.2f}" if value is not None else "N/A"
+
         contexto = f"""
         Dados da Análise de Decisão e Previsão de Preços de Energia:
         1. Análise de Decisão Histórica (Árvore de Decisão):
-           - Melhor alternativa de recolhimento de palhiço: {dados_arvore['melhor_alternativa']}
+           - Melhor alternativa de recolhimento de palhiço (baseado em dados passados): {dados_arvore['melhor_alternativa']}
            - Valor Monetário Esperado: R$ {dados_arvore['maior_receita']:,.2f}
 
-        2. Validação dos Modelos Preditivos (Região Sudeste, menor RMSE é melhor):
-           - Prophet RMSE: {sudeste_metrics['Prophet']['RMSE']:.2f}
-           - ARIMA RMSE: {sudeste_metrics['ARIMA']['RMSE']:.2f}
-           - SARIMA RMSE: {sudeste_metrics['SARIMA']['RMSE']:.2f}
-           - Melhor Modelo Preditivo: {melhor_modelo_preditivo}
+        2. Validação dos Modelos Preditivos (Região Sudeste):
+           - Prophet: MAE={format_metric('Prophet', 'MAE')}, RMSE={format_metric('Prophet', 'RMSE')}
+           - ARIMA:   MAE={format_metric('ARIMA', 'MAE')}, RMSE={format_metric('ARIMA', 'RMSE')}
+           - SARIMA:  MAE={format_metric('SARIMA', 'MAE')}, RMSE={format_metric('SARIMA', 'RMSE')} (Nota: Este modelo é especialista em sazonalidade)
         """
-
         prompt = f"""
-        Você é um consultor especialista em energia e finanças, preparando um sumário executivo para a diretoria de uma usina.
-        Sua análise deve ser clara, direta e focada em insights acionáveis.
-        Com base no contexto a seguir, escreva um relatório conciso em 4 tópicos.
+        Você é um consultor sênior de energia, conhecido por suas análises criteriosas. Seu público é a diretoria de uma usina.
+        Com base no contexto a seguir, escreva um sumário executivo em 4 tópicos.
+
+        Sua tarefa é analisar as métricas de validação dos modelos. Considere o trade-off: um MAE baixo indica boa acurácia média, enquanto um RMSE baixo indica poucos erros extremos.
+        Pondere também a vantagem estrutural do modelo SARIMA em capturar sazonalidade, que é visualmente importante para este problema.
+        Com base nesta análise multifatorial, recomende o modelo preditivo mais confiável para a tomada de decisão.
 
         Contexto da Análise:
         {contexto}
 
-        Por favor, forneça sua resposta estritamente no formato JSON, com uma chave "titulo" e uma chave "insights" que é uma lista de 4 strings. Exemplo: {{"titulo": "Seu Título", "insights": ["Insight 1", "Insight 2", "Insight 3", "Insight 4"]}}
+        Forneça sua resposta estritamente no formato JSON, com uma chave "titulo" e uma chave "insights" que é uma lista de 4 strings.
         """
 
-        # --- CORREÇÃO APLICADA AQUI ---
-        # Adicionamos 'safety_settings' para desativar os bloqueios de segurança.
         safety_config = {
-            'HARM_CATEGORY_HARASSMENT': 'BLOCK_NONE',
-            'HARM_CATEGORY_HATE_SPEECH': 'BLOCK_NONE',
-            'HARM_CATEGORY_SEXUALLY_EXPLICIT': 'BLOCK_NONE',
-            'HARM_CATEGORY_DANGEROUS_CONTENT': 'BLOCK_NONE',
+            'HARM_CATEGORY_HARASSMENT': 'BLOCK_NONE', 'HARM_CATEGORY_HATE_SPEECH': 'BLOCK_NONE',
+            'HARM_CATEGORY_SEXUALLY_EXPLICIT': 'BLOCK_NONE', 'HARM_CATEGORY_DANGEROUS_CONTENT': 'BLOCK_NONE',
         }
         
         response = model.generate_content(prompt, safety_settings=safety_config)
         
-        # Para depuração, podemos imprimir o texto da resposta antes de tentar o parse
-        # print("Raw API Response Text:", response.text)
         cleaned_response_text = response.text.strip().replace('```json', '').replace('```', '').strip()
         
-        # Salva a resposta da IA em um arquivo JSON
         insights_data = json.loads(cleaned_response_text)
         filepath = os.path.join(OUTPUT_DIR_DATA, "insights_ia.json")
         with open(filepath, 'w', encoding='utf-8') as f:
             json.dump(insights_data, f, ensure_ascii=False, indent=4)
         
-        print(f"Insights da IA salvos com sucesso em: {filepath}")
+        print(f"Insights da IA (versão refinada) salvos com sucesso em: {filepath}")
 
     except json.JSONDecodeError:
-        print(f"\nERRO CRÍTICO: A API do Gemini retornou uma resposta que não é um JSON válido.")
-        print("Isso pode ser devido a uma resposta vazia ou a um bloqueio de conteúdo não relacionado à segurança.")
-        print("Resposta recebida:", response.text)
+        print(f"\nERRO CRÍTICO: A API do Gemini retornou uma resposta que não é um JSON válido, mesmo após a limpeza.")
+        print("Resposta recebida (bruta):", response.text)
     except Exception as e:
         print(f"\nERRO ao gerar insights com a IA: {e}")
-        print("Verifique sua chave de API, a conexão com a internet ou o prompt. A geração de insights será ignorada.")
-
+        print("A geração de insights será ignorada.")
 # --- FUNÇÃO PRINCIPAL ---
 def main():
     """Orquestra a geração de todos os ativos estáticos para o site."""

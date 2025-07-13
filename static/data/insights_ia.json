@@ -1,9 +1,9 @@
 {
-    "titulo": "Sumário Executivo: Otimização de Receita com Palhiço e Previsão de Preços",
+    "titulo": "Sumário Executivo: Análise e Recomendação de Modelo Preditivo de Preços de Energia",
     "insights": [
-        "A análise de decisão indica que o **enfardamento do palhiço** é a estratégia operacional superior, com um Valor Monetário Esperado (VME) de **R$ 13,1 milhões**, devendo ser priorizada para maximizar o retorno financeiro.",
-        "Para a previsão de preços de energia na região Sudeste, o modelo **Prophet** demonstrou a maior precisão (menor RMSE: 106.37), sendo a ferramenta recomendada para embasar nossas estratégias de comercialização e hedge.",
-        "A combinação da operação de enfardamento com as previsões acuradas do Prophet nos permite otimizar o *timing* de venda da energia gerada pela biomassa, alinhando a produção aos períodos de preços mais vantajosos no mercado.",
-        "**Ação Recomendada:** Alocar recursos para implementar a logística de enfardamento e integrar o modelo Prophet em nossas ferramentas de análise de mercado, a fim de capitalizar rapidamente sobre esta vantagem competitiva e ganhos operacionais."
+        "O modelo ARIMA apresentou a maior acurácia média (MAE 67.19), indicando ser o mais preciso em previsões pontuais. Contudo, todos os modelos demonstraram desempenho competitivo, com métricas de erro próximas entre si, não havendo um vencedor absoluto apenas por critérios numéricos.",
+        "A análise do trade-off entre acurácia média (MAE) e a penalização de erros extremos (RMSE) é crucial. O modelo SARIMA, embora com o maior RMSE (109.94), possui um MAE (69.62) muito próximo ao do líder ARIMA, sugerindo que sua performance média é quase tão boa, apesar de uma leve tendência a erros de maior magnitude em situações pontuais.",
+        "A vantagem estrutural do SARIMA em capturar padrões de sazonalidade é um diferencial estratégico para o setor de energia. Dado que os preços são fortemente influenciados por ciclos anuais e sazonais, a capacidade inata deste modelo em prever essas flutuações o torna qualitativamente superior para o planejamento de médio e longo prazo.",
+        "Recomendação: Adotar o modelo **SARIMA** como a ferramenta principal para a previsão de preços. Sua pequena desvantagem nas métricas de erro é compensada pela sua robustez em modelar a sazonalidade, fator crítico para a tomada de decisão estratégica. Isso o torna o modelo mais confiável para antecipar os movimentos cíclicos do mercado, alinhando as operações da usina com a dinâmica de preços esperada."
     ]
 }
