@@ -1,333 +1,80 @@
 /* --- 1. Configurações Globais e Variáveis --- */
-
 :root {
-    --primary-color: #005f73; /* Um azul-petróleo mais sóbrio */
+    --primary-color: #005f73;
     --secondary-color: #0a9396;
-    --background-color: #f8f9fa; /* Fundo off-white */
-    --text-color: #343a40; /* Cinza escuro para texto */
+    --background-color: #f8f9fa;
+    --text-color: #343a40;
     --heading-color: #003440;
     --card-background: #ffffff;
     --border-color: #dee2e6;
     --shadow: 0 4px 15px rgba(0, 0, 0, 0.07);
-    
     --font-heading: 'Poppins', sans-serif;
     --font-body: 'Lato', sans-serif;
 }
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: var(--font-body); background-color: var(--background-color); color: var(--text-color); line-height: 1.7; }
+.container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+img { max-width: 100%; height: auto; border-radius: 8px; }
 
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-
-body {
-    font-family: var(--font-body);
-    background-color: var(--background-color);
-    color: var(--text-color);
-    line-height: 1.7;
-}
-
-.container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 20px;
-}
-
-img {
-    max-width: 100%;
-    height: auto;
-    border-radius: 8px;
-}
-
-/* --- 2. Cabeçalho e Rodapé --- */
-
-header {
-    background: var(--primary-color);
-    color: white;
-    padding: 2.5rem 0;
-    text-align: center;
-    border-bottom: 5px solid var(--secondary-color);
-    margin-bottom: 2rem;
-}
-
-header h1 {
-    font-family: var(--font-heading);
-    font-size: 2.8rem;
-    margin-bottom: 0.5rem;
-}
-
-footer {
-    text-align: center;
-    padding: 2rem 0;
-    margin-top: 3rem;
-    background-color: #e9ecef;
-    color: #6c757d;
-    font-size: 0.9rem;
-}
+/* --- 2. Cabeçalho --- */
+header { background: var(--primary-color); color: white; padding: 2.5rem 0; text-align: center; border-bottom: 5px solid var(--secondary-color); margin-bottom: 2rem; }
+header h1 { font-family: var(--font-heading); font-size: 2.8rem; margin-bottom: 0.5rem; }
 
 /* --- 3. Layout Principal e Cards --- */
-
-h2, h3 {
-    font-family: var(--font-heading);
-    color: var(--heading-color);
-    margin-bottom: 1rem;
-}
-
-#intro {
-    text-align: center;
-    margin-bottom: 3rem;
-}
-
-#intro h2 {
-    font-size: 2rem;
-}
-
-#intro p {
-    font-size: 1.1rem;
-    max-width: 800px;
-    margin: 0 auto;
-    color: #6c757d;
-}
-
-.results-grid {
-    display: grid;
-    /* Cria colunas flexíveis com no mínimo 450px */
-    grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
-    gap: 2rem;
-}
-
-.result-card {
-    background: var(--card-background);
-    padding: 2rem;
-    border-radius: 12px;
-    box-shadow: var(--shadow);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-    animation: fadeIn 0.8s ease-out forwards;
-    opacity: 0;
-}
-
-.result-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-}
-
-/* Para o card da tabela ocupar a largura total */
-.result-card.full-width {
-    grid-column: 1 / -1;
-}
+h2, h3 { font-family: var(--font-heading); color: var(--heading-color); margin-bottom: 1rem; }
+.results-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(450px, 1fr)); gap: 2rem; }
+.result-card { background: var(--card-background); padding: 2rem; border-radius: 12px; box-shadow: var(--shadow); transition: transform 0.3s ease, box-shadow 0.3s ease; animation: fadeIn 0.8s ease-out forwards; opacity: 0; }
+.result-card:hover { transform: translateY(-5px); box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1); }
+.result-card.full-width { grid-column: 1 / -1; }
 
 /* --- 4. Tabela Responsiva e Estilizada --- */
-
-.table-wrapper {
-    overflow-x: auto; /* Permite scroll horizontal em telas pequenas */
-}
-
-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 1rem;
-}
-
-th, td {
-    padding: 1rem;
-    text-align: left;
-    border-bottom: 1px solid var(--border-color);
-}
-
-thead {
-    background-color: #f1f3f5;
-}
-
-th {
-    font-family: var(--font-heading);
-    font-weight: 600;
-    color: var(--primary-color);
-}
-
-tbody tr:nth-child(even) {
-    background-color: #f8f9fa;
-}
-
-tbody tr:hover {
-    background-color: #e9ecef;
-}
+.table-wrapper { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+th, td { padding: 1rem; text-align: left; border-bottom: 1px solid var(--border-color); }
+thead { background-color: #f1f3f5; }
+th { font-family: var(--font-heading); font-weight: 600; color: var(--primary-color); }
+tbody tr:nth-child(even) { background-color: #f8f9fa; }
+tbody tr:hover { background-color: #e9ecef; }
 
 /* --- 5. Animações e Media Queries para Responsividade --- */
-
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-/* Para telas menores (tablets e celulares) */
+@keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 @media (max-width: 768px) {
-    header h1 {
-        font-size: 2.2rem;
-    }
-    #intro h2 {
-        font-size: 1.8rem;
-    }
-    .results-grid {
-        /* Garante uma única coluna em telas menores */
-        grid-template-columns: 1fr;
-    }
-    .result-card {
-        padding: 1.5rem;
-    }
-
-    /* --- 6. Estilos do Rodapé Detalhado --- */
-
-footer {
-    background-color: #343a40; /* Um cinza mais escuro para o rodapé */
-    color: #e9ecef;
-    padding-top: 3rem;
-    padding-bottom: 0;
-    margin-top: 3rem;
+    header h1 { font-size: 2.2rem; }
+    .results-grid { grid-template-columns: 1fr; }
+    .result-card { padding: 1.5rem; }
 }
 
-.footer-content {
-    display: flex;
-    flex-wrap: wrap; /* Permite que os itens quebrem a linha em telas menores */
-    justify-content: space-between;
-    gap: 2rem;
-    padding-bottom: 2rem;
-}
-
-.footer-section {
-    flex: 1;
-    min-width: 250px; /* Largura mínima para cada seção antes de quebrar a linha */
-}
-
-.footer-section h4 {
-    font-family: var(--font-heading);
-    color: white;
-    margin-bottom: 1rem;
-    position: relative;
-    padding-bottom: 0.5rem;
-}
-
-/* Linha sutil abaixo dos títulos do rodapé */
-.footer-section h4::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 40px;
-    height: 2px;
-    background-color: var(--secondary-color);
-}
-
-.footer-section p {
-    margin-bottom: 0.5rem;
-}
-
-.footer-section a {
-    color: #ced4da;
-    text-decoration: none;
-    transition: color 0.3s ease;
-}
-
-.footer-section a:hover {
-    color: white;
-    text-decoration: underline;
-}
-
-.footer-bottom {
-    background-color: #212529; /* Ainda mais escuro para a barra final */
-    text-align: center;
-    padding: 1rem 0;
-    font-size: 0.9rem;
-    color: #6c757d;
-}
+/* --- 6. Estilos do Rodapé Detalhado --- */
+footer { background-color: #343a40; color: #e9ecef; padding-top: 3rem; padding-bottom: 0; margin-top: 3rem; }
+.footer-content { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 2rem; padding-bottom: 2rem; }
+.footer-section { flex: 1; min-width: 250px; }
+.footer-section h4 { font-family: var(--font-heading); color: white; margin-bottom: 1rem; position: relative; padding-bottom: 0.5rem; }
+.footer-section h4::after { content: ''; position: absolute; bottom: 0; left: 0; width: 40px; height: 2px; background-color: var(--secondary-color); }
+.footer-section p { margin-bottom: 0.5rem; }
+.footer-section a { color: #ced4da; text-decoration: none; transition: color 0.3s ease; }
+.footer-section a:hover { color: white; text-decoration: underline; }
+.footer-bottom { background-color: #212529; text-align: center; padding: 1rem 0; font-size: 0.9rem; color: #6c757d; }
 
 /* --- 7. Estilos para as Seções de Análise e Explicação --- */
+.analysis-step { margin-bottom: 4rem; }
+.section-intro { font-size: 1.1rem; max-width: 850px; margin: 0 auto 2rem auto; text-align: center; color: #555; }
+.models-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; }
+.model-card { background-color: #eef7f9; border-left: 5px solid var(--secondary-color); padding: 1.5rem; border-radius: 8px; }
+.model-card h4 { color: var(--primary-color); margin-bottom: 0.5rem; }
+.result-card small { display: block; text-align: center; margin-top: 1rem; color: #888; font-style: italic; }
+.insights-card { background: var(--card-background); padding: 2.5rem; border-radius: 12px; box-shadow: var(--shadow); }
+.insights-card ul { list-style: none; padding-left: 0; }
+.insights-card li { padding-left: 2rem; position: relative; margin-bottom: 1rem; }
+.insights-card li::before { content: '✔'; position: absolute; left: 0; color: var(--secondary-color); font-weight: bold; }
 
-.analysis-step {
-    margin-bottom: 4rem;
-}
+/* --- 8. Estilos para o Lightbox (CORRIGIDO) --- */
+.expandable-image { cursor: pointer; transition: opacity 0.3s ease; }
+.expandable-image:hover { opacity: 0.8; }
 
-.section-intro {
-    font-size: 1.1rem;
-    max-width: 850px;
-    margin: 0 auto 2rem auto;
-    text-align: center;
-    color: #555;
-}
-
-.models-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 1.5rem;
-}
-
-.model-card {
-    background-color: #eef7f9;
-    border-left: 5px solid var(--secondary-color);
-    padding: 1.5rem;
-    border-radius: 8px;
-}
-
-.model-card h4 {
-    color: var(--primary-color);
-    margin-bottom: 0.5rem;
-}
-
-.result-card small {
-    display: block;
-    text-align: center;
-    margin-top: 1rem;
-    color: #888;
-    font-style: italic;
-}
-
-.insights-card {
-    background: var(--card-background);
-    padding: 2.5rem;
-    border-radius: 12px;
-    box-shadow: var(--shadow);
-}
-
-.insights-card ul {
-    list-style: none;
-    padding-left: 0;
-}
-
-.insights-card li {
-    padding-left: 2rem;
-    position: relative;
-    margin-bottom: 1rem;
-}
-
-/* Adiciona um ícone de "check" para os insights */
-.insights-card li::before {
-    content: '✔';
-    position: absolute;
-    left: 0;
-    color: var(--secondary-color);
-    font-weight: bold;
-}
-
-
-/* --- 8. Estilos para o Lightbox (Imagem Expandida) --- */
-
-.expandable-image {
-    cursor: pointer;
-    transition: opacity 0.3s ease;
-}
-
-.expandable-image:hover {
-    opacity: 0.8;
-}
-
-.lightbox-overlay {
-    display: none; /* Escondido por padrão */
-    position: fixed;
+/* A correção principal está aqui. Usamos o ID #lightbox para garantir a especificidade */
+#lightbox {
+    display: none;
+    position: fixed; /* ESSA É A PROPRIEDADE CHAVE */
     z-index: 1000;
     top: 0;
     left: 0;
@@ -338,32 +85,7 @@ footer {
     align-items: center;
     animation: fadeIn 0.4s;
 }
-
-.lightbox-content {
-    max-width: 90%;
-    max-height: 90%;
-    object-fit: contain;
-    animation: zoomIn 0.4s;
-}
-
-.lightbox-close {
-    position: absolute;
-    top: 20px;
-    right: 35px;
-    color: #f1f1f1;
-    font-size: 40px;
-    font-weight: bold;
-    cursor: pointer;
-    transition: color 0.3s ease;
-}
-
-.lightbox-close:hover {
-    color: #bbb;
-}
-
-/* Animações para o Lightbox */
-@keyframes zoomIn {
-    from { transform: scale(0.8); }
-    to { transform: scale(1); }
-}
-}
+.lightbox-content { max-width: 90%; max-height: 90%; object-fit: contain; animation: zoomIn 0.4s; }
+.lightbox-close { position: absolute; top: 20px; right: 35px; color: #f1f1f1; font-size: 40px; font-weight: bold; cursor: pointer; transition: color 0.3s ease; }
+.lightbox-close:hover { color: #bbb; }
+@keyframes zoomIn { from { transform: scale(0.8); } to { transform: scale(1); } }
