@@ -14,11 +14,15 @@ document.addEventListener('DOMContentLoaded', function() {
     async function updateDashboard(region) {
         showLoader();
 
-        // Carrega os dados de previsão e validação em paralelo para mais velocidade
+        if (Object.keys(allValidationMetrics).length === 0) { // Verifica se é a primeira carga
         await Promise.all([
             loadForecastData(region),
-            loadValidationData()
+            loadValidationData(),
+            loadAndRenderAIInsights() // Carrega os insights da IA junto
         ]);
+        } else {
+            await loadForecastData(region); // Em outras cargas, só carrega os dados da região
+        }
 
         // Renderiza todas as seções do dashboard com os novos dados
         updateTitles(region);
@@ -73,24 +77,46 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     function renderValidationSection(region) {
-        const regionMetrics = allValidationMetrics[region];
-        if (!regionMetrics) return;
+        const regionMetricsData = allValidationMetrics[region];
+        if (!regionMetricsData) return;
 
+        // --- Parte 1: Atualizar o sumário de outliers (inalterado) ---
         const summaryEl = document.getElementById('validation-summary');
-        summaryEl.innerHTML = `Para a região <strong>${capitalize(region)}</strong>, foram detectados e tratados <strong>${regionMetrics.outliers_count} outliers</strong> (${regionMetrics.outliers_percentage}% do total de dados).`;
+        summaryEl.innerHTML = `Para a região <strong>${capitalize(region)}</strong>, foram detectados e tratados <strong>${regionMetricsData.outliers_count} outliers</strong> (${regionMetricsData.outliers_percentage}% do total de dados).`;
 
+        // --- Parte 2: Popular a tabela de métricas (inalterado) ---
         const tableBody = document.querySelector("#validation-table tbody");
         tableBody.innerHTML = '';
         
-        for (const modelName in regionMetrics.metrics) {
-            const metrics = regionMetrics.metrics[modelName];
+        const modelsMetrics = regionMetricsData.metrics;
+        for (const modelName in modelsMetrics) {
+            const metrics = modelsMetrics[modelName];
             const row = tableBody.insertRow();
             row.insertCell(0).textContent = modelName;
-            
-            // --- CORREÇÃO AQUI: Verifica se o valor é nulo antes de formatar ---
             row.insertCell(1).textContent = metrics.MAE !== null ? metrics.MAE.toFixed(2) : 'N/A';
             row.insertCell(2).textContent = metrics.MSE !== null ? metrics.MSE.toFixed(2) : 'N/A';
             row.insertCell(3).textContent = metrics.RMSE !== null ? metrics.RMSE.toFixed(2) : 'N/A';
+        }
+
+        // --- Parte 3: Lógica para encontrar e destacar o melhor modelo (NOVO) ---
+        let bestModelName = null;
+        let lowestRmse = Infinity;
+
+        for (const modelName in modelsMetrics) {
+            const rmse = modelsMetrics[modelName].RMSE;
+            // Considera o modelo apenas se o RMSE for um número válido e menor que o atual menor
+            if (rmse !== null && rmse < lowestRmse) {
+                lowestRmse = rmse;
+                bestModelName = modelName;
+            }
+        }
+        
+        // Atualiza o texto no card de destaque no Passo 4
+        const bestModelTextEl = document.getElementById('best-model-text');
+        if (bestModelName) {
+            bestModelTextEl.innerHTML = `Com base na validação, o modelo de melhor performance para esta região foi o <strong>${bestModelName}</strong>, com um erro (RMSE) de <strong>${lowestRmse.toFixed(2)}</strong>. Ele é nossa principal referência para as previsões futuras.`;
+        } else {
+            bestModelTextEl.textContent = 'Não foi possível determinar um modelo de melhor performance com base nas métricas disponíveis.';
         }
     }
 
@@ -187,4 +213,32 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // --- CARGA INICIAL DO DASHBOARD ---
     updateDashboard('sudeste');
+
+    async function loadAndRenderAIInsights() {
+    const container = document.getElementById('ia-insights-container');
+    try {
+        const response = await fetch('static/data/insights_ia.json');
+        if (!response.ok) throw new Error('Arquivo de insights da IA não encontrado.');
+        
+        const data = await response.json();
+        
+        container.innerHTML = ''; // Limpa o loader
+        
+        const title = document.createElement('h4');
+        title.textContent = data.titulo;
+        container.appendChild(title);
+        
+        const insightList = document.createElement('ul');
+        data.insights.forEach(insightText => {
+            const listItem = document.createElement('li');
+            listItem.textContent = insightText;
+            insightList.appendChild(listItem);
+        });
+        container.appendChild(insightList);
+        
+    } catch (error) {
+        console.error("Erro ao carregar insights da IA:", error);
+        container.innerHTML = '<p>Não foi possível carregar os insights gerados pela IA. Por favor, execute o script de geração de dados novamente.</p>';
+    }
+}
 });

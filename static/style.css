@@ -337,3 +337,41 @@ footer { background-color: #343a40; color: #e9ecef; padding-top: 3rem; padding-b
 .methodology-text {
     text-align: left;
 }
+
+.loader-spinner.small {
+    width: 30px;
+    height: 30px;
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid var(--secondary-color);
+    margin: 0 auto 1rem auto;
+}
+
+/* --- Estilos para o Card de Destaque do Melhor Modelo --- */
+
+.best-model-card {
+    background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+    color: white;
+    border-radius: 12px;
+    padding: 2rem;
+    margin: 2rem auto;
+    text-align: center;
+    box-shadow: 0 8px 25px rgba(0, 95, 115, 0.2);
+}
+
+.best-model-card h4 {
+    color: white;
+    margin-top: 0;
+    margin-bottom: 1rem;
+    font-size: 1.5rem;
+}
+
+.best-model-card p {
+    font-size: 1.1rem;
+    line-height: 1.6;
+    max-width: 700px;
+    margin: 0 auto;
+}
+
+.best-model-card strong {
+    font-weight: 700;
+}

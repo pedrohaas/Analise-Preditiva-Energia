@@ -85,10 +85,26 @@
 
         <section class="analysis-step">
             <h2>Passo 4: Previsões e Análise de Cenários Futuros</h2>
-            <p class="section-intro">Com os modelos validados, geramos as previsões para os próximos 16 meses, permitindo uma comparação direta entre as diferentes projeções.</p>
+            <p class="section-intro">Com os modelos validados, geramos as previsões para os próximos 16 meses. O destaque abaixo aponta o modelo com melhor aderência aos dados históricos, servindo como nossa principal referência para o futuro.</p>
+
+            <div class="best-model-card">
+                <h4>⭐ Modelo em Destaque</h4>
+                <p id="best-model-text">Com base na validação, o modelo mais preciso para esta região foi o...</p>
+            </div>
+
             <div class="results-grid">
-                <div class="result-card"><h3>Comparativo de Previsões de Preço</h3><img id="forecastChart" class="expandable-image" src="static/images/forecast_sudeste.png" alt="Gráfico de Previsões"><small>Clique na imagem para expandir.</small></div>
-                <div class="result-card full-width"><h3>Tabela Detalhada (Próximos 16 Meses)</h3><div class="table-wrapper"><table id="forecastTable"></table></div></div>
+                <div class="result-card">
+                    <h3>Comparativo de Previsões de Preço</h3>
+                    <img id="forecastChart" class="expandable-image" src="static/images/forecast_sudeste.png" alt="Gráfico de Previsões">
+                    <small>Clique na imagem para expandir.</small>
+                </div>
+                <div class="result-card full-width">
+                    <h3>Tabela Detalhada (Próximos 16 Meses)</h3>
+                    <div class="table-wrapper">
+                        <table id="forecastTable">
+                            </table>
+                    </div>
+                </div>
             </div>
         </section>
 

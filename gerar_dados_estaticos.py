@@ -12,6 +12,7 @@ from matplotlib.table import Table
 import os
 import json
 import warnings
+import google.generativeai as genai
 
 # --- CONFIGURAÇÕES GLOBAIS ---
 warnings.filterwarnings('ignore')
@@ -170,6 +171,66 @@ def criar_arvore_decisao_alternativas(df_dist):
     plt.savefig(filepath); plt.close()
     print(f"Imagem da Árvore Comparativa salva: {filepath}")
 
+def gerar_insights_com_ia(dados_validacao, dados_arvore):
+    """
+    Consolida os dados, cria um prompt e chama a API do Gemini para gerar insights.
+    """
+    print("\n--- Gerando Insights com a IA do Gemini ---")
+    
+    try:
+        # Configura a API usando a variável de ambiente
+        GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY')
+        if not GOOGLE_API_KEY:
+            print("AVISO: Chave de API do Google não encontrada na variável de ambiente GOOGLE_API_KEY.")
+            print("A geração de insights com IA será ignorada.")
+            return
+
+        genai.configure(api_key=GOOGLE_API_KEY)
+        model = genai.GenerativeModel('gemini-pro')
+
+        # Consolida os dados mais relevantes para o prompt
+        sudeste_metrics = dados_validacao['sudeste']['metrics']
+        melhor_modelo_preditivo = min(sudeste_metrics, key=lambda m: sudeste_metrics[m]['RMSE'] if sudeste_metrics[m]['RMSE'] is not None else float('inf'))
+        
+        contexto = f"""
+        Dados da Análise de Decisão e Previsão de Preços de Energia:
+        1. Análise de Decisão Histórica (Árvore de Decisão):
+        - Melhor alternativa de recolhimento de palhiço: {dados_arvore['melhor_alternativa']}
+        - Valor Monetário Esperado: R$ {dados_arvore['maior_receita']:,.2f}
+
+        2. Validação dos Modelos Preditivos (Região Sudeste, menor RMSE é melhor):
+        - Prophet RMSE: {sudeste_metrics['Prophet']['RMSE']:.2f}
+        - ARIMA RMSE: {sudeste_metrics['ARIMA']['RMSE']:.2f}
+        - SARIMA RMSE: {sudeste_metrics['SARIMA']['RMSE']:.2f}
+        - Melhor Modelo Preditivo: {melhor_modelo_preditivo}
+        """
+
+        prompt = f"""
+        Você é um consultor especialista em energia e finanças, preparando um sumário executivo para a diretoria de uma usina de açúcar e álcool.
+        Sua análise deve ser clara, direta e focada em insights acionáveis.
+        Com base no contexto a seguir, escreva um relatório conciso em 4 tópicos.
+
+        Contexto da Análise:
+        {contexto}
+
+        Por favor, forneça sua resposta estritamente no formato JSON, com uma chave "titulo" e uma chave "insights" que é uma lista de 4 strings. Exemplo: {{"titulo": "Seu Título", "insights": ["Insight 1", "Insight 2", "Insight 3", "Insight 4"]}}
+        """
+
+        response = model.generate_content(prompt)
+        
+        # Salva a resposta da IA em um arquivo JSON
+        insights_data = json.loads(response.text)
+        filepath = os.path.join(OUTPUT_DIR_DATA, "insights_ia.json")
+        with open(filepath, 'w', encoding='utf-8') as f:
+            json.dump(insights_data, f, ensure_ascii=False, indent=4)
+        
+        print(f"Insights da IA salvos com sucesso em: {filepath}")
+
+    except Exception as e:
+        print(f"\nERRO ao gerar insights com a IA: {e}")
+        print("Verifique sua chave de API e a conexão com a internet. A geração de insights será ignorada.")
+
+
 # --- FUNÇÃO PRINCIPAL ---
 def main():
     """Orquestra a geração de todos os ativos estáticos para o site."""
@@ -291,6 +352,15 @@ def main():
     with open(validation_filepath, 'w', encoding='utf-8') as f:
         json.dump(all_validation_metrics, f, ensure_ascii=False, indent=4)
     print(f"\nArquivo com métricas de validação salvo: {validation_filepath}")
+    print("\n[SUCESSO] Geração de todos os dados estáticos concluída!")
+
+    # Prepara os dados para a IA
+    dados_arvore_para_ia = {
+        "melhor_alternativa": "Enfardamento", # Extraído da análise
+        "maior_receita": 13137340.00 # Extraído da análise
+    }
+    gerar_insights_com_ia(all_validation_metrics, dados_arvore_para_ia)
+
     print("\n[SUCESSO] Geração de todos os dados estáticos concluída!")
 
 if __name__ == '__main__':
