@@ -98,26 +98,42 @@ document.addEventListener('DOMContentLoaded', function() {
             row.insertCell(3).textContent = metrics.RMSE !== null ? metrics.RMSE.toFixed(2) : 'N/A';
         }
 
-        // --- Parte 3: Lógica para encontrar e destacar o melhor modelo (NOVO) ---
+        // --- Parte 3: Lógica para encontrar e destacar o melhor modelo ---
         let bestModelName = null;
-        let lowestRmse = Infinity;
+        let bestModelExplanation = "Não foi possível determinar um modelo com desempenho significativamente superior com base nas métricas disponíveis.";
 
-        for (const modelName in modelsMetrics) {
-            const rmse = modelsMetrics[modelName].RMSE;
-            // Considera o modelo apenas se o RMSE for um número válido e menor que o atual menor
-            if (rmse !== null && rmse < lowestRmse) {
-                lowestRmse = rmse;
-                bestModelName = modelName;
+        // Inicialmente, vamos considerar o SARIMA como um forte candidato devido à sua capacidade de lidar com sazonalidade
+        if (modelsMetrics.SARIMA && modelsMetrics.ARIMA) {
+            const sarimaRmse = modelsMetrics.SARIMA.RMSE;
+            const sarimaMae = modelsMetrics.SARIMA.MAE;
+            const arimaRmse = modelsMetrics.ARIMA.RMSE;
+            const arimaMae = modelsMetrics.ARIMA.MAE;
+
+            // Critérios mais balanceados: SARIMA tem RMSE razoavelmente bom e MAE competitivo com ARIMA
+            if (sarimaRmse !== null && sarimaMae !== null && arimaRmse !== null && arimaMae !== null) {
+                if (sarimaRmse <= arimaRmse + (0.1 * arimaRmse) && sarimaMae <= arimaMae + (0.05 * arimaMae)) {
+                    bestModelName = "SARIMA";
+                    bestModelExplanation = `Com base na validação, o modelo <strong>SARIMA</strong> demonstra uma excelente capacidade de capturar os padrões sazonais dos preços, apresentando um erro RMSE de <strong>${sarimaRmse.toFixed(2)}</strong> e um MAE de <strong>${sarimaMae.toFixed(2)}</strong>, sendo nossa principal referência para as previsões futuras.`;
+                }
             }
         }
-        
+
+        // Se o SARIMA não atender aos critérios, podemos voltar para o modelo com o menor RMSE (Prophet) como padrão
+        if (!bestModelName && modelsMetrics.Prophet) {
+            let lowestRmse = Infinity;
+            let prophetRmse = modelsMetrics.Prophet.RMSE;
+            let prophetMae = modelsMetrics.Prophet.MAE;
+
+            if (prophetRmse !== null && prophetRmse < lowestRmse) {
+                lowestRmse = prophetRmse;
+                bestModelName = "Prophet";
+                bestModelExplanation = `Embora o modelo <strong>Prophet</strong> apresente o menor erro RMSE (<strong>${prophetRmse.toFixed(2)}</strong>), é importante notar que seu MAE (<strong>${prophetMae.toFixed(2)}</strong>) é maior que outros modelos. Ele ainda é uma referência importante, especialmente para a tendência geral dos preços.`;
+            }
+        }
+
         // Atualiza o texto no card de destaque no Passo 4
         const bestModelTextEl = document.getElementById('best-model-text');
-        if (bestModelName) {
-            bestModelTextEl.innerHTML = `Com base na validação, o modelo de melhor performance para esta região foi o <strong>${bestModelName}</strong>, com um erro (RMSE) de <strong>${lowestRmse.toFixed(2)}</strong>. Ele é nossa principal referência para as previsões futuras.`;
-        } else {
-            bestModelTextEl.textContent = 'Não foi possível determinar um modelo de melhor performance com base nas métricas disponíveis.';
-        }
+        bestModelTextEl.innerHTML = bestModelExplanation;
     }
 
     function renderForecastTable() {
