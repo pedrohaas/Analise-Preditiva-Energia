@@ -5,7 +5,7 @@
 
 Um dashboard web interativo e responsivo para análise de séries temporais, previsão de preços de energia e suporte à decisão estratégica, com insights gerados por Inteligência Artificial.
 
-**[➡️ Acessar a Demonstração Ao Vivo]([https://pedrohaas.github.io/T1-TomadaDecisao/](https://pedrohaas.github.io/Analise-Preditiva-Energia/))**
+**[➡️ Acessar a Demonstração Ao Vivo](https://pedrohaas.github.io/Analise-Preditiva-Energia/)**
 
 ---
 
