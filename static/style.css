@@ -22,7 +22,7 @@ header h1 { font-family: var(--font-heading); font-size: 2.8rem; margin-bottom: 
 
 /* --- 3. Layout Principal e Cards --- */
 h2, h3 { font-family: var(--font-heading); color: var(--heading-color); margin-bottom: 1rem; }
-.results-grid { max-height: 450px; display: grid; grid-template-columns: repeat(auto-fit, minmax(450px, 1fr)); gap: 2rem; }
+.results-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(450px, 1fr)); gap: 2rem; }
 .result-card { background: var(--card-background); padding: 2rem; border-radius: 12px; box-shadow: var(--shadow); transition: transform 0.3s ease, box-shadow 0.3s ease; animation: fadeIn 0.8s ease-out forwards; opacity: 0; }
 .result-card:hover { transform: translateY(-5px); box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1); }
 .result-card.full-width { grid-column: 1 / -1; }
