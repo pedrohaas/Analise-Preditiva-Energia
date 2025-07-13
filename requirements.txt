@@ -1,0 +1,9 @@
+pandas
+numpy
+prophet
+statsmodels
+scikit-learn
+matplotlib
+scipy
+flask
+openpyxl
