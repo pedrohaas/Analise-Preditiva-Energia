@@ -310,3 +310,30 @@ footer { background-color: #343a40; color: #e9ecef; padding-top: 3rem; padding-b
     font-family: 'Courier New', Courier, monospace;
     text-align: right; /* Alinha os números à direita */
 }
+
+/* --- Estilos para a Caixa de Aviso Metodológico --- */
+
+.methodology-box {
+    display: flex;
+    align-items: flex-start;
+    background-color: #e2e3e5; /* Cinza claro de informação */
+    color: #41464b;
+    border: 1px solid #d3d6d8;
+    border-left: 5px solid #6c757d; /* Borda de destaque cinza */
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin: 0 auto 2.5rem auto;
+    max-width: 900px;
+}
+
+.methodology-icon {
+    font-size: 1.5rem;
+    font-family: 'Times New Roman', Times, serif;
+    font-weight: bold;
+    margin-right: 1rem;
+    line-height: 1.2;
+}
+
+.methodology-text {
+    text-align: left;
+}
