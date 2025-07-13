@@ -4,39 +4,39 @@ from prophet import Prophet
 from statsmodels.tsa.arima.model import ARIMA
 from statsmodels.tsa.statespace.sarimax import SARIMAX
 from statsmodels.tsa.seasonal import STL
+from sklearn.metrics import mean_absolute_error, mean_squared_error
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 from scipy import stats
-from matplotlib.table import Table # Importação necessária para a tabela
+from matplotlib.table import Table
 import os
 import json
 import warnings
 
+# --- CONFIGURAÇÕES GLOBAIS ---
 warnings.filterwarnings('ignore')
 plt.style.use('ggplot')
+OUTPUT_DIR_IMAGES = "static/images"
+OUTPUT_DIR_DATA = "static/data"
 
-# --- Funções de Análise de Previsão (da etapa anterior) ---
+# --- FUNÇÕES DE ANÁLISE ---
 
 def tratar_outliers(serie, metodo='iqr', limite=1.5):
     serie_limpa = serie.copy()
-    if metodo == 'iqr':
-        Q1, Q3 = serie.quantile(0.25), serie.quantile(0.75)
-        IQR = Q3 - Q1
-        outliers_indices = np.where((serie < (Q1 - limite * IQR)) | (serie > (Q3 + limite * IQR)))[0]
-    else:
-        z_scores = np.abs(stats.zscore(serie))
-        outliers_indices = np.where(z_scores > limite)[0]
+    q1, q3 = serie.quantile(0.25), serie.quantile(0.75)
+    iqr = q3 - q1
+    limite_inferior, limite_superior = q1 - limite * iqr, q3 + limite * iqr
+    outliers_indices = np.where((serie < limite_inferior) | (serie > limite_superior))[0]
     janela = 5
     for idx in outliers_indices:
         inicio, fim = max(0, idx - janela//2), min(len(serie), idx + janela//2 + 1)
         vizinhanca = [val for i, val in enumerate(serie.iloc[inicio:fim]) if i + inicio != idx]
         if vizinhanca: serie_limpa.iloc[idx] = np.median(vizinhanca)
-    return serie_limpa
+    return serie_limpa, len(outliers_indices)
 
 def visualizar_outliers(df_original, df_tratado, region_name):
-    # (Esta função permanece inalterada)
-    output_dir = "static/images"; os.makedirs(output_dir, exist_ok=True)
-    filepath = f"{output_dir}/outliers_{region_name.lower()}.png"
+    """Gera e salva o gráfico de detecção de outliers."""
+    filepath = f"{OUTPUT_DIR_IMAGES}/outliers_{region_name.lower()}.png"
     plt.figure(figsize=(14, 6))
     plt.plot(df_original.index, df_original, 'o-', alpha=0.7, label='Série Original', color='blue')
     outliers_mask = df_original.iloc[:, 0] != df_tratado.iloc[:, 0]
@@ -48,12 +48,11 @@ def visualizar_outliers(df_original, df_tratado, region_name):
     plt.xlabel('Data', fontsize=12); plt.ylabel('Preço Médio (R$)', fontsize=12)
     plt.grid(True); plt.legend(); plt.tight_layout()
     plt.savefig(filepath); plt.close()
-    print(f"Gráfico de outliers salvo em: {filepath}")
+    print(f"Imagem de outliers salva: {filepath}")
 
 def plotar_decomposicao_stl(serie, region_name):
-    # (Esta função permanece inalterada)
-    output_dir = "static/images"; os.makedirs(output_dir, exist_ok=True)
-    filepath = f"{output_dir}/decomposition_{region_name.lower()}.png"
+    """Gera e salva o gráfico de decomposição STL."""
+    filepath = f"{OUTPUT_DIR_IMAGES}/decomposition_{region_name.lower()}.png"
     serie_resampled = serie.asfreq('MS')
     stl = STL(serie_resampled, seasonal=13)
     resultado = stl.fit()
@@ -64,11 +63,11 @@ def plotar_decomposicao_stl(serie, region_name):
     resultado.resid.plot(ax=ax4, legend=False); ax4.set_ylabel('Resíduo')
     fig.suptitle(f'Decomposição da Série Temporal - Região {region_name.upper()}', fontsize=16)
     plt.tight_layout(rect=[0, 0.03, 1, 0.95]); plt.savefig(filepath); plt.close()
-    print(f"Gráfico de decomposição salvo em: {filepath}")
+    print(f"Imagem de decomposição salva: {filepath}")
 
 def realizar_previsao(df_region, future_dates, region):
-    # (Esta função permanece inalterada)
-    df_tratado_serie = tratar_outliers(df_region[region])
+    """Realiza a previsão com os 3 modelos para o futuro."""
+    df_tratado_serie, _ = tratar_outliers(df_region[region])
     df_tratado = pd.DataFrame(df_tratado_serie)
     df_prophet_input = df_tratado.reset_index().rename(columns={'MES': 'ds', region: 'y'})
     model_prophet = Prophet(yearly_seasonality=True, weekly_seasonality=False, daily_seasonality=False).fit(df_prophet_input)
@@ -80,9 +79,8 @@ def realizar_previsao(df_region, future_dates, region):
     return forecast_prophet, forecast_arima, forecast_sarima, df_tratado
 
 def plotar_previsoes_futuras(original, tratado, forecasts, future_dates, region):
-    # (Esta função permanece inalterada)
-    output_dir = "static/images"; os.makedirs(output_dir, exist_ok=True)
-    filepath = f"{output_dir}/forecast_{region.lower()}.png"
+    """Gera e salva o gráfico com as previsões futuras."""
+    filepath = f"{OUTPUT_DIR_IMAGES}/forecast_{region.lower()}.png"
     plt.figure(figsize=(14, 8))
     plt.plot(original.iloc[-36:].index, original.iloc[-36:][region], 'o-', label='Histórico (Original)', color='blue', alpha=0.4)
     plt.plot(tratado.iloc[-36:].index, tratado.iloc[-36:][region], 'o-', label='Histórico (Tratado)', color='darkblue')
@@ -97,22 +95,18 @@ def plotar_previsoes_futuras(original, tratado, forecasts, future_dates, region)
     plt.gca().xaxis.set_major_locator(mdates.MonthLocator(interval=3))
     plt.gcf().autofmt_xdate(); plt.tight_layout()
     plt.savefig(filepath); plt.close()
-    print(f"Gráfico de previsões salvo em: {filepath}")
-
-# --- NOVAS FUNÇÕES: Para a Árvore de Decisão e Galeria ---
+    print(f"Imagem de previsões salva: {filepath}")
 
 def criar_quadro_min_max(min_global, max_global, min_por_ano, max_por_ano):
-    output_dir = "static/images"; os.makedirs(output_dir, exist_ok=True)
-    filepath = f"{output_dir}/quadro_min_max.png"
+    """Cria a imagem da tabela de preços mínimos e máximos."""
+    filepath = f"{OUTPUT_DIR_IMAGES}/quadro_min_max.png"
     anos = ['Global'] + [str(a) for a in min_por_ano.index]
     minimos = [min_global] + list(min_por_ano.values)
     maximos = [max_global] + [max_por_ano[a] for a in min_por_ano.index]
     df_mm = pd.DataFrame({'Período': anos, 'Valor Mínimo (R$)': minimos, 'Valor Máximo (R$)': maximos})
-    
     fig, ax = plt.subplots(figsize=(10, 0.2 * len(df_mm) + 1)); ax.axis('off'); ax.axis('tight')
     tabela = Table(ax, bbox=[0, 0, 1, 1]); larguras = [0.3, 0.35, 0.35]; altura_linha = 0.3
     tabela.auto_set_font_size(False); tabela.set_fontsize(10)
-    
     tabela.add_cell(0, -1, width=sum(larguras), height=altura_linha*1.5, text='Valores mínimos e máximos do PLD (Sudeste/CO)', loc='center', facecolor='lightgray')
     for col_idx, col_name in enumerate(df_mm.columns):
         tabela.add_cell(1, col_idx, width=larguras[col_idx], height=altura_linha, text=col_name, loc='center', facecolor='lightyellow')
@@ -122,11 +116,11 @@ def criar_quadro_min_max(min_global, max_global, min_por_ano, max_por_ano):
             if isinstance(texto, (int, float)): texto = f'R$ {texto:,.2f}'
             tabela.add_cell(i+2, j, width=larguras[j], height=altura_linha, text=str(texto), loc='center')
     ax.add_table(tabela); plt.tight_layout(); plt.savefig(filepath, bbox_inches='tight', dpi=150); plt.close()
-    print(f"Imagem do Quadro Min/Max salva em: {filepath}")
+    print(f"Imagem do Quadro Min/Max salva: {filepath}")
 
 def plotar_sensibilidade_receita():
-    output_dir = "static/images"; os.makedirs(output_dir, exist_ok=True)
-    filepath = f"{output_dir}/sensibilidade_receita.png"
+    """Cria a imagem da análise de sensibilidade."""
+    filepath = f"{OUTPUT_DIR_IMAGES}/sensibilidade_receita.png"
     precos = np.linspace(0, 800, 100); producao_integral = 70000; producao_enfardamento = 80000; producao_parcial = 37500
     receita_integral = precos * producao_integral; receita_enfardamento = precos * producao_enfardamento; receita_parcial = precos * producao_parcial
     plt.figure(figsize=(10,6)); plt.plot(precos, receita_integral, label='Colheita integral', linewidth=2)
@@ -135,19 +129,16 @@ def plotar_sensibilidade_receita():
     plt.xlabel('Preço médio da energia (R$/MWh)'); plt.ylabel('Receita (R$)')
     plt.title('Análise de sensibilidade da receita por alternativa'); plt.legend(); plt.grid(True); plt.tight_layout()
     plt.savefig(filepath); plt.close()
-    print(f"Imagem de Sensibilidade salva em: {filepath}")
+    print(f"Imagem de Sensibilidade salva: {filepath}")
 
 def criar_arvore_horizontal_classes(df_dist, forma_recolhimento, producao_excedente):
-    output_dir = "static/images"; os.makedirs(output_dir, exist_ok=True)
+    """Cria a imagem de uma árvore de decisão individual."""
     filename = f"arvore_{forma_recolhimento.lower().replace(' ', '_')}.png"
-    filepath = os.path.join(output_dir, filename)
-    
+    filepath = os.path.join(OUTPUT_DIR_IMAGES, filename)
     receita_esperada = (df_dist['Frequência']/100 * df_dist['Ponto médio'] * producao_excedente).sum()
-    
     fig, ax = plt.subplots(figsize=(12, 8)); ax.axis('off')
     ax.plot([10, 30], [50, 50], 'k-')
     ax.text(10, 50, f'{forma_recolhimento}\nProdução: {producao_excedente:,} MWh', ha='center', va='center', bbox=dict(boxstyle="square,pad=0.5", fc="white", ec="black"))
-    
     y_positions = np.linspace(95, 5, len(df_dist))
     for i, row in df_dist.iterrows():
         prob = row['Frequência']
@@ -155,20 +146,18 @@ def criar_arvore_horizontal_classes(df_dist, forma_recolhimento, producao_excede
         receita = preco * producao_excedente
         ax.plot([30, 50], [50, y_positions[i]], 'k-')
         ax.text(55, y_positions[i], f'Preço: R$ {preco:,.2f} ({prob}%)\nE(Receita): R$ {receita:,.2f}', ha='left', va='center', bbox=dict(boxstyle="round,pad=0.5", fc="lightblue", ec="black"))
-    
     ax.set_title(f'Árvore de Decisão para {forma_recolhimento}', fontsize=16)
     fig.text(0.5, 0.02, f'Valor Esperado Total (Receita): R$ {receita_esperada:,.2f}', ha='center', fontsize=14, color='green', weight='bold')
     plt.savefig(filepath, bbox_inches='tight'); plt.close()
-    print(f"Imagem da Árvore '{forma_recolhimento}' salva em: {filepath}")
+    print(f"Imagem da Árvore '{forma_recolhimento}' salva: {filepath}")
 
 def criar_arvore_decisao_alternativas(df_dist):
-    output_dir = "static/images"; os.makedirs(output_dir, exist_ok=True)
-    filepath = f"{output_dir}/decision_tree_alternatives.png"
+    """Cria a imagem da árvore de decisão final comparativa."""
+    filepath = f"{OUTPUT_DIR_IMAGES}/decision_tree_alternatives.png"
     alternativas = {'Enfardamento': 80000, 'Colheita integral': 70000, 'Colheita parcial': 37500}
     receitas_esperadas = {nome: (df_dist['Frequência']/100 * df_dist['Ponto médio'] * producao).sum() for nome, producao in alternativas.items()}
     melhor_alternativa = max(receitas_esperadas, key=receitas_esperadas.get)
     maior_receita = receitas_esperadas[melhor_alternativa]
-
     fig, ax = plt.subplots(figsize=(14, 8)); ax.set_xlim(0, 100); ax.set_ylim(0, 100); ax.axis('off')
     ax.plot([10, 30], [50, 50], 'k-')
     ax.text(5, 50, 'Escolha do método\nde recolhimento', ha='center', va='center', bbox=dict(boxstyle="square,pad=0.5", fc="white", ec="black"))
@@ -179,22 +168,33 @@ def criar_arvore_decisao_alternativas(df_dist):
     ax.set_title('Árvore de Decisão Comparativa dos Métodos', fontsize=16)
     fig.text(0.5, 0.05, f'Melhor alternativa: {melhor_alternativa} com E(Receita): R$ {maior_receita:,.2f}', ha='center', fontsize=14, color='green', weight='bold')
     plt.savefig(filepath); plt.close()
-    print(f"Imagem da Árvore de Decisão Comparativa salva em: {filepath}")
+    print(f"Imagem da Árvore Comparativa salva: {filepath}")
 
-
-# --- Função Principal Modificada ---
+# --- FUNÇÃO PRINCIPAL ---
 def main():
+    """Orquestra a geração de todos os ativos estáticos para o site."""
     print("Iniciando a geração de todos os dados e gráficos estáticos...")
-    df_full = pd.read_excel("Historico_do_Preco_Medio_Mensal_-_janeiro_de_2001_a_abril_de_2025.xls")
-    df_full['MES'] = pd.to_datetime(df_full['MES'], format='%b-%y', errors='coerce')
     
+    # Garante que os diretórios de saída existam
+    os.makedirs(OUTPUT_DIR_IMAGES, exist_ok=True)
+    os.makedirs(OUTPUT_DIR_DATA, exist_ok=True)
+    
+    # Carregamento dos dados
+    try:
+        df_full = pd.read_excel("Historico_do_Preco_Medio_Mensal_-_janeiro_de_2001_a_abril_de_2025.xls")
+        df_full['MES'] = pd.to_datetime(df_full['MES'], format='%b-%y', errors='coerce')
+    except FileNotFoundError:
+        print("ERRO: Arquivo 'Historico_do_Preco_Medio_Mensal_-_janeiro_de_2001_a_abril_de_2025.xls' não encontrado.")
+        return
+
     # --- Bloco 1: GERAÇÃO DAS ANÁLISES DE DECISÃO (baseadas nos dados históricos do Sudeste) ---
     print("\n--- Gerando Análises de Decisão e Sensibilidade ---")
     df_sudeste_original = df_full[['MES', 'SUDESTE']].dropna()
-    df_sudeste = df_sudeste_original.copy()
-    df_sudeste['SUDESTE'] = tratar_outliers(df_sudeste['SUDESTE'])
-    
-    min_g = df_sudeste_original['SUDESTE'].min(); max_g = df_sudeste_original['SUDESTE'].max()
+    df_sudeste_serie, _ = tratar_outliers(df_sudeste_original['SUDESTE'])
+    df_sudeste = pd.DataFrame(df_sudeste_serie)
+
+    min_g = df_sudeste_original['SUDESTE'].min()
+    max_g = df_sudeste_original['SUDESTE'].max()
     min_ano = df_sudeste_original.groupby(df_sudeste_original['MES'].dt.year)['SUDESTE'].min()
     max_ano = df_sudeste_original.groupby(df_sudeste_original['MES'].dt.year)['SUDESTE'].max()
     criar_quadro_min_max(min_g, max_g, min_ano, max_ano)
@@ -218,26 +218,79 @@ def main():
     criar_arvore_decisao_alternativas(df_dist)
 
 
-    # --- Bloco 2: GERAÇÃO DOS DADOS DE PREVISÃO PARA CADA REGIÃO ---
+    # --- Bloco 2: GERAÇÃO DOS DADOS DE PREVISÃO E VALIDAÇÃO ---
     regioes = ['SUDESTE', 'SUL', 'NORDESTE', 'NORTE']
     future_dates = pd.date_range(start='2024-06-01', periods=16, freq='M')
-    data_dir = "static/data"
-    if not os.path.exists(data_dir): os.makedirs(data_dir)
+    all_validation_metrics = {}
 
     for region in regioes:
-        print(f"\n--- Processando Região para Previsão: {region} ---")
+        print(f"\n--- Processando Região para Previsão e Validação: {region} ---")
         df_region = df_full[['MES', region]].dropna().set_index('MES')
-        prophet, arima, sarima, df_tratado = realizar_previsao(df_region, future_dates, region)
-        plotar_decomposicao_stl(df_tratado[region], region)
-        forecasts = {'prophet': prophet, 'arima': arima, 'sarima': sarima}
-        visualizar_outliers(df_region, pd.DataFrame(df_tratado[region]), region)
-        plotar_previsoes_futuras(df_region, pd.DataFrame(df_tratado[region]), forecasts, future_dates, region)
-        forecast_table_data = {'Data': future_dates.strftime('%b/%Y').tolist(), 'Prophet': prophet['yhat'].tolist(), 'ARIMA': arima.tolist(), 'SARIMA': sarima.tolist()}
-        json_filepath = f"{data_dir}/forecast_data_{region.lower()}.json"
+        
+        df_tratado_serie, num_outliers = tratar_outliers(df_region[region])
+        df_tratado = pd.DataFrame(df_tratado_serie)
+        
+        train_data, test_data = df_tratado[:-5], df_tratado[-5:]
+        
+        # Prophet
+        prophet_val = Prophet(yearly_seasonality=True, weekly_seasonality=False, daily_seasonality=False).fit(train_data.reset_index().rename(columns={'MES': 'ds', region: 'y'}))
+        prophet_pred = prophet_val.predict(test_data.reset_index().rename(columns={'MES': 'ds'}))['yhat'].values
+        
+        # ARIMA
+        arima_val = ARIMA(train_data[region], order=(5,1,0)).fit()
+        arima_pred = arima_val.forecast(steps=5)
+
+        # SARIMA
+        sarima_val = SARIMAX(train_data[region], order=(5,1,0), seasonal_order=(1,1,0,12)).fit(disp=False)
+        sarima_pred = sarima_val.forecast(steps=5)
+
+        # Bloco try-except para o STL Forecast para garantir compatibilidade
+        try:
+            stl_result = STL(train_data[region].asfreq('MS'), seasonal=13).fit()
+            stl_pred = stl_result.forecast(5)
+        except AttributeError:
+            print(f"AVISO: A versão do statsmodels instalada não suporta 'STL.forecast()'. A validação para o modelo STL será ignorada.")
+            stl_pred = np.full(5, np.nan) # Cria um array de NaNs se a função falhar
+
+        # Função auxiliar para calcular métricas de forma segura
+        def calculate_metrics(y_true, y_pred):
+            if np.isnan(y_pred).any():
+                return {'MAE': None, 'MSE': None, 'RMSE': None}
+            return {
+                'MAE': mean_absolute_error(y_true, y_pred),
+                'MSE': mean_squared_error(y_true, y_pred),
+                'RMSE': np.sqrt(mean_squared_error(y_true, y_pred))
+            }
+
+        metrics = {
+            'Prophet': calculate_metrics(test_data[region], prophet_pred),
+            'ARIMA': calculate_metrics(test_data[region], arima_pred),
+            'SARIMA': calculate_metrics(test_data[region], sarima_pred),
+            'STL': calculate_metrics(test_data[region], stl_pred),
+        }
+
+        all_validation_metrics[region.lower()] = {
+            'outliers_count': num_outliers,
+            'outliers_percentage': round((num_outliers / len(df_region)) * 100, 2),
+            'metrics': metrics
+        }
+        
+        prophet_full, arima_full, sarima_full, df_tratado_full = realizar_previsao(df_region, future_dates, region)
+        plotar_decomposicao_stl(df_tratado_full[region], region)
+        forecasts = {'prophet': prophet_full, 'arima': arima_full, 'sarima': sarima_full}
+        visualizar_outliers(df_region, df_tratado_full, region)
+        plotar_previsoes_futuras(df_region, df_tratado_full, forecasts, future_dates, region)
+        
+        forecast_table_data = {'Data': future_dates.strftime('%b/%Y').tolist(), 'Prophet': prophet_full['yhat'].tolist(), 'ARIMA': arima_full.tolist(), 'SARIMA': sarima_full.tolist()}
+        json_filepath = f"{OUTPUT_DIR_DATA}/forecast_data_{region.lower()}.json"
         with open(json_filepath, 'w', encoding='utf-8') as f:
             json.dump(forecast_table_data, f, ensure_ascii=False, indent=4)
-        print(f"Dados da tabela salvos em: {json_filepath}")
+        print(f"Dados de previsão salvos: {json_filepath}")
 
+    validation_filepath = os.path.join(OUTPUT_DIR_DATA, "validation_metrics.json")
+    with open(validation_filepath, 'w', encoding='utf-8') as f:
+        json.dump(all_validation_metrics, f, ensure_ascii=False, indent=4)
+    print(f"\nArquivo com métricas de validação salvo: {validation_filepath}")
     print("\n[SUCESSO] Geração de todos os dados estáticos concluída!")
 
 if __name__ == '__main__':

@@ -9,7 +9,10 @@
     <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700&family=Poppins:wght@500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="static/style.css">
 </head>
-<body>
+<body class="loading"> <div id="loader-overlay">
+        <div class="loader-spinner"></div>
+    </div>
+
     <header>
         <div class="container">
             <h1>Dashboard de Análise Preditiva</h1>
@@ -28,10 +31,66 @@
             </div>
         </section>
 
-        <section class="analysis-step"><h2>Passo 1: Entendendo o Comportamento do Preço</h2><p class="section-intro">Antes de prever, precisamos entender. A análise de decomposição divide a série de preços em seus componentes fundamentais: a <strong>Tendência</strong> de longo prazo, os ciclos de <strong>Sazonalidade</strong> e os <strong>Resíduos</strong> (ruído aleatório).</p><div class="result-card"><h3 id="decomposition-card-title">Decomposição da Série Temporal</h3><img id="decompositionChart" class="expandable-image" src="static/images/decomposition_sudeste.png" alt="Gráfico de Decomposição da Série"><small>Clique na imagem para expandir.</small></div></section>
-        <section class="analysis-step"><h2 id="outliers-title">Passo 2: Preparação e Limpeza dos Dados</h2><p class="section-intro">Com os padrões identificados, o próximo passo foi tratar os "outliers" – valores atípicos que podem distorcer a análise. Isso garante uma série temporal mais estável e previsões mais confiáveis.</p><div class="result-card"><h3 id="outliers-card-title">Detecção e Tratamento de Outliers</h3><img id="outliersChart" class="expandable-image" src="static/images/outliers_sudeste.png" alt="Gráfico de Detecção de Outliers"><small>Clique na imagem para expandir.</small></div></section>
-        <section class="analysis-step"><h2>Passo 3: A Escolha dos Modelos Preditivos</h2><p class="section-intro">Aplicamos três abordagens estatísticas robustas e comparamos seus resultados para obter uma visão mais completa e confiável do futuro.</p><div class="models-grid"><div class="model-card"><h4>Prophet</h4><p>Excelente para dados com fortes tendências sazonais. Robusto a dados faltantes e mudanças de tendência.</p></div><div class="model-card"><h4>ARIMA</h4><p>Modelo estatístico clássico para análise de séries temporais, ideal para capturar tendências e dependências nos dados.</p></div><div class="model-card"><h4>SARIMA</h4><p>Uma evolução do ARIMA que adiciona um componente para tratar explicitamente da sazonalidade, tornando-o poderoso para este tipo de dado.</p></div></div></section>
-        <section class="analysis-step"><h2>Passo 4: Previsões e Análise de Cenários</h2><div class="results-grid"><div class="result-card"><h3>Comparativo de Previsões de Preço</h3><img id="forecastChart" class="expandable-image" src="static/images/forecast_sudeste.png" alt="Gráfico de Previsões"><small>Clique na imagem para expandir.</small></div><div class="result-card full-width"><h3>Tabela Detalhada (Próximos 16 Meses)</h3><div class="table-wrapper"><table id="forecastTable"></table></div></div></div></section>
+        <section class="analysis-step">
+            <h2>Passo 1: Entendendo o Comportamento do Preço</h2>
+            <p class="section-intro">Antes de prever, precisamos entender. A análise de decomposição divide a série de preços em seus componentes fundamentais: a <strong>Tendência</strong> de longo prazo, os ciclos de <strong>Sazonalidade</strong> e os <strong>Resíduos</strong> (ruído aleatório).</p>
+            <div class="result-card">
+                <h3 id="decomposition-card-title">Decomposição da Série Temporal</h3>
+                <img id="decompositionChart" class="expandable-image" src="static/images/decomposition_sudeste.png" alt="Gráfico de Decomposição da Série">
+                <small>Clique na imagem para expandir.</small>
+            </div>
+        </section>
+
+        <section class="analysis-step">
+            <h2 id="outliers-title">Passo 2: Preparação e Limpeza dos Dados</h2>
+            <p class="section-intro">Com os padrões identificados, o próximo passo foi tratar os "outliers" – valores atípicos que podem distorcer a análise. Isso garante uma série temporal mais estável e previsões mais confiáveis.</p>
+            <div class="result-card">
+                <h3 id="outliers-card-title">Detecção e Tratamento de Outliers</h3>
+                <img id="outliersChart" class="expandable-image" src="static/images/outliers_sudeste.png" alt="Gráfico de Detecção de Outliers">
+                <small>Clique na imagem para expandir.</small>
+            </div>
+        </section>
+
+        <section class="analysis-step">
+            <h2>Passo 3: Escolha e Validação dos Modelos</h2>
+            <p class="section-intro">
+                Aplicamos quatro abordagens estatísticas e comparamos seus resultados. A tabela abaixo mostra o desempenho de cada modelo ao prever os últimos 5 meses de dados históricos conhecidos (backtesting), validando sua eficácia antes de usá-los para prever o futuro.
+            </p>
+            <div class="models-grid">
+                <div class="model-card"><h4>Prophet</h4><p>Excelente para dados com fortes tendências sazonais. Robusto a dados faltantes e mudanças de tendência.</p></div>
+                <div class="model-card"><h4>ARIMA</h4><p>Modelo estatístico clássico ideal para capturar tendências e dependências nos dados.</p></div>
+                <div class="model-card"><h4>SARIMA</h4><p>Evolução do ARIMA que adiciona um componente sazonal, tornando-o especialmente poderoso para este tipo de dado.</p></div>
+                <div class="model-card"><h4>STL Forecast</h4><p>Um método robusto que decompõe a série em Tendência, Sazonalidade e Resíduos, e depois prevê cada componente.</p></div>
+            </div>
+            <div class="result-card validation-card">
+                <h3>Métricas de Validação dos Modelos (Backtesting)</h3>
+                <p id="validation-summary">Analisando a região SUDESTE...</p>
+                <div class="table-wrapper">
+                    <table id="validation-table">
+                        <thead>
+                            <tr>
+                                <th>Modelo</th>
+                                <th>MAE (Erro Médio Absoluto)</th>
+                                <th>MSE (Erro Quadrático Médio)</th>
+                                <th>RMSE (Raiz do Erro Quadrático Médio)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            </tbody>
+                    </table>
+                </div>
+                <small>Menores valores indicam um melhor desempenho do modelo nos dados históricos.</small>
+            </div>
+        </section>
+
+        <section class="analysis-step">
+            <h2>Passo 4: Previsões e Análise de Cenários Futuros</h2>
+            <p class="section-intro">Com os modelos validados, geramos as previsões para os próximos 16 meses, permitindo uma comparação direta entre as diferentes projeções.</p>
+            <div class="results-grid">
+                <div class="result-card"><h3>Comparativo de Previsões de Preço</h3><img id="forecastChart" class="expandable-image" src="static/images/forecast_sudeste.png" alt="Gráfico de Previsões"><small>Clique na imagem para expandir.</small></div>
+                <div class="result-card full-width"><h3>Tabela Detalhada (Próximos 16 Meses)</h3><div class="table-wrapper"><table id="forecastTable"></table></div></div>
+            </div>
+        </section>
 
         <section class="analysis-step">
             <h2>Passo 5: Análise de Decisão Baseada em Dados Históricos</h2>
@@ -40,11 +99,10 @@
             </p>
             <div class="result-card">
                 <h3>Árvore de Decisão Comparativa das Alternativas</h3>
-                <p>O gráfico abaixo consolida os resultados, apontando a melhor alternativa geral.</p>
+                <p>O gráfico abaixo consolida os resultados, apontando a melhor alternativa geral com base nos dados históricos da região Sudeste/Centro-Oeste.</p>
                 <img id="decisionTreeChart" class="expandable-image" src="static/images/decision_tree_alternatives.png" alt="Gráfico da Árvore de Decisão Comparativa">
                 <small>Clique na imagem para expandir.</small>
             </div>
-
             <div class="gallery-wrapper">
                 <h3>Galeria de Análises de Suporte</h3>
                 <div class="horizontal-gallery">
@@ -75,16 +133,14 @@
         <section class="analysis-step">
             <h2>Passo 6: Ferramenta de Análise de Investimento (Baseada em Previsões Futuras)</h2>
             <p class="section-intro">
-                Diferente da Árvore de Decisão, que usa probabilidades históricas, esta ferramenta utiliza as <strong>previsões de preço para os próximos 16 meses</strong> geradas pelos modelos (Prophet, ARIMA, SARIMA). Ela permite simular um cenário de investimento futuro, calculando a economia que seria gerada ao produzir energia própria em vez de comprá-la da rede. Isso oferece uma análise de viabilidade financeira orientada para o futuro, complementando a análise de risco histórico.
+                Diferente da Árvore de Decisão, que usa probabilidades históricas, esta ferramenta utiliza as <strong>previsões de preço para os próximos 16 meses</strong> geradas pelos modelos. Ela permite simular um cenário de investimento futuro, calculando a economia que seria gerada ao produzir energia própria em vez de comprá-la da rede.
             </p>
-
             <div class="disclaimer-box">
                 <div class="disclaimer-icon">!</div>
                 <div class="disclaimer-text">
                     <strong>Aviso Importante:</strong> Esta é uma ferramenta de simulação desenvolvida para fins estritamente acadêmicos. As previsões são baseadas em um conjunto de dados fixo que pode estar desatualizado. Os resultados aqui apresentados são ilustrativos e <strong>não devem, em nenhuma hipótese, ser utilizados como base para decisões financeiras reais.</strong>
                 </div>
             </div>
-            
             <div class="investment-tool">
                 <div class="investment-inputs">
                     <div class="input-group"><label for="investmentCost">Custo do Investimento (R$)</label><input type="number" id="investmentCost" value="310000"></div>
@@ -95,7 +151,11 @@
         </section>
     </main>
 
-    <div id="lightbox" class="lightbox-overlay"><span class="lightbox-close">&times;</span><img class="lightbox-content" id="lightbox-img"></div>
+    <div id="lightbox" class="lightbox-overlay">
+        <span class="lightbox-close">&times;</span>
+        <img class="lightbox-content" id="lightbox-img">
+    </div>
+
     <footer>
         <div class="container footer-content">
             <div class="footer-section about"><h4>Sobre o Projeto</h4><p>Este projeto de análise preditiva foi desenvolvido para fins acadêmicos, disponibilizado gratuitamente para a comunidade.</p></div>

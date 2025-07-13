@@ -292,3 +292,21 @@ footer { background-color: #343a40; color: #e9ecef; padding-top: 3rem; padding-b
     margin-bottom: 0.5rem;
     font-size: 1.1rem;
 }
+
+/* --- 13. Estilos para a Tabela de Validação --- */
+
+.validation-card {
+    margin-top: 2rem;
+}
+
+#validation-summary {
+    text-align: center;
+    margin-bottom: 1.5rem;
+    font-size: 1.1rem;
+    color: var(--text-color);
+}
+
+#validation-table td:not(:first-child) {
+    font-family: 'Courier New', Courier, monospace;
+    text-align: right; /* Alinha os números à direita */
+}
