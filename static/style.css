@@ -1,0 +1,183 @@
+/* --- 1. Configurações Globais e Variáveis --- */
+
+:root {
+    --primary-color: #005f73; /* Um azul-petróleo mais sóbrio */
+    --secondary-color: #0a9396;
+    --background-color: #f8f9fa; /* Fundo off-white */
+    --text-color: #343a40; /* Cinza escuro para texto */
+    --heading-color: #003440;
+    --card-background: #ffffff;
+    --border-color: #dee2e6;
+    --shadow: 0 4px 15px rgba(0, 0, 0, 0.07);
+    
+    --font-heading: 'Poppins', sans-serif;
+    --font-body: 'Lato', sans-serif;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: var(--font-body);
+    background-color: var(--background-color);
+    color: var(--text-color);
+    line-height: 1.7;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+}
+
+/* --- 2. Cabeçalho e Rodapé --- */
+
+header {
+    background: var(--primary-color);
+    color: white;
+    padding: 2.5rem 0;
+    text-align: center;
+    border-bottom: 5px solid var(--secondary-color);
+    margin-bottom: 2rem;
+}
+
+header h1 {
+    font-family: var(--font-heading);
+    font-size: 2.8rem;
+    margin-bottom: 0.5rem;
+}
+
+footer {
+    text-align: center;
+    padding: 2rem 0;
+    margin-top: 3rem;
+    background-color: #e9ecef;
+    color: #6c757d;
+    font-size: 0.9rem;
+}
+
+/* --- 3. Layout Principal e Cards --- */
+
+h2, h3 {
+    font-family: var(--font-heading);
+    color: var(--heading-color);
+    margin-bottom: 1rem;
+}
+
+#intro {
+    text-align: center;
+    margin-bottom: 3rem;
+}
+
+#intro h2 {
+    font-size: 2rem;
+}
+
+#intro p {
+    font-size: 1.1rem;
+    max-width: 800px;
+    margin: 0 auto;
+    color: #6c757d;
+}
+
+.results-grid {
+    display: grid;
+    /* Cria colunas flexíveis com no mínimo 450px */
+    grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+    gap: 2rem;
+}
+
+.result-card {
+    background: var(--card-background);
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    animation: fadeIn 0.8s ease-out forwards;
+    opacity: 0;
+}
+
+.result-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+/* Para o card da tabela ocupar a largura total */
+.result-card.full-width {
+    grid-column: 1 / -1;
+}
+
+/* --- 4. Tabela Responsiva e Estilizada --- */
+
+.table-wrapper {
+    overflow-x: auto; /* Permite scroll horizontal em telas pequenas */
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+}
+
+th, td {
+    padding: 1rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+}
+
+thead {
+    background-color: #f1f3f5;
+}
+
+th {
+    font-family: var(--font-heading);
+    font-weight: 600;
+    color: var(--primary-color);
+}
+
+tbody tr:nth-child(even) {
+    background-color: #f8f9fa;
+}
+
+tbody tr:hover {
+    background-color: #e9ecef;
+}
+
+/* --- 5. Animações e Media Queries para Responsividade --- */
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Para telas menores (tablets e celulares) */
+@media (max-width: 768px) {
+    header h1 {
+        font-size: 2.2rem;
+    }
+    #intro h2 {
+        font-size: 1.8rem;
+    }
+    .results-grid {
+        /* Garante uma única coluna em telas menores */
+        grid-template-columns: 1fr;
+    }
+    .result-card {
+        padding: 1.5rem;
+    }
+}

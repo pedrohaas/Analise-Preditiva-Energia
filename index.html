@@ -3,54 +3,65 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Análise Econômica Interativa</title>
+    <title>Análise Econômica Interativa | Preços de Energia</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
+    
     <link rel="stylesheet" href="static/style.css">
 </head>
 <body>
     <header>
-        <h1>Análise Econômica: Palhiço de Cana e Preços de Energia</h1>
-        <p>Interface interativa para visualização de previsões e análises de decisão.</p>
+        <div class="container">
+            <h1>Análise Econômica</h1>
+            <p>Previsão de Preços de Energia e Análise de Cenários</p>
+        </div>
     </header>
 
-    <main>
-        <section id="controls">
-            <button id="runAnalysisBtn">Executar Análise</button>
-            <div id="loader" class="loader" style="display:none;"></div>
+    <main class="container">
+        <section id="intro">
+            <h2>Relatório de Análise Preditiva</h2>
+            <p>Os resultados a seguir apresentam as previsões de preço médio de energia para a região Sudeste, utilizando os modelos Prophet, ARIMA e SARIMA, após o tratamento de outliers na série histórica.</p>
         </section>
 
         <section id="results">
-            <h2>Resultados da Análise</h2>
-            
-            <div class="result-item">
-                <h3>Detecção de Outliers</h3>
-                <img id="outliersChart" src="" alt="Gráfico de Detecção de Outliers">
-            </div>
-            
-            <div class="result-item">
-                <h3>Previsões de Preço de Energia</h3>
-                <img id="forecastChart" src="" alt="Gráfico de Previsões">
-            </div>
+            <div class="results-grid">
+                
+                <div class="result-card">
+                    <h3>Detecção e Tratamento de Outliers</h3>
+                    <img id="outliersChart" src="static/images/outliers_sudeste.png" alt="Gráfico de Detecção de Outliers">
+                </div>
+                
+                <div class="result-card">
+                    <h3>Previsões de Preço de Energia</h3>
+                    <img id="forecastChart" src="static/images/forecast_sudeste.png" alt="Gráfico de Previsões">
+                </div>
 
-            <div class="result-item">
-                <h3>Tabela de Previsões (Próximos 16 Meses)</h3>
-                <table id="forecastTable">
-                    <thead>
-                        <tr>
-                            <th>Data</th>
-                            <th>Prophet</th>
-                            <th>ARIMA</th>
-                            <th>SARIMA</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        </tbody>
-                </table>
+                <div class="result-card full-width">
+                    <h3>Tabela de Previsões (Próximos 16 Meses)</h3>
+                    <div class="table-wrapper">
+                        <table id="forecastTable">
+                            <thead>
+                                <tr>
+                                    <th>Data</th>
+                                    <th>Prophet</th>
+                                    <th>ARIMA</th>
+                                    <th>SARIMA</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                </tbody>
+                        </table>
+                    </div>
+                </div>
+
             </div>
         </section>
     </main>
 
     <footer>
-        <p>Projeto desenvolvido como interface para a análise do notebook T1.ipynb.</p>
+        <p>Projeto de Análise Econômica - T1</p>
     </footer>
 
     <script src="static/script.js"></script>
