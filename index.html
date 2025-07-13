@@ -36,12 +36,39 @@
         <section class="analysis-step">
             <h2>Passo 5: Análise de Decisão Baseada em Dados Históricos</h2>
             <p class="section-intro">
-                Esta análise utiliza uma <strong>Árvore de Decisão</strong> para determinar a melhor estratégia de recolhimento de palhiço (Enfardamento, Colheita Integral ou Parcial) com base na probabilidade de ocorrência de diferentes faixas de preço, extraídas de toda a série histórica de dados da região Sudeste. O objetivo é escolher a alternativa com o maior <strong>Valor Monetário Esperado (E(Receita))</strong>, representando a decisão mais lucrativa sob uma perspectiva de risco histórico.
+                Esta análise utiliza uma <strong>Árvore de Decisão</strong> para determinar a melhor estratégia de recolhimento de palhiço, baseada na probabilidade de ocorrência de diferentes faixas de preço extraídas de toda a série histórica. O objetivo é escolher a alternativa com o maior <strong>Valor Monetário Esperado (E(Receita))</strong>. A galeria abaixo detalha cada etapa desta análise.
             </p>
             <div class="result-card">
                 <h3>Árvore de Decisão Comparativa das Alternativas</h3>
-                <img id="decisionTreeChart" class="expandable-image" src="static/images/decision_tree_alternatives.png" alt="Gráfico da Árvore de Decisão">
+                <p>O gráfico abaixo consolida os resultados, apontando a melhor alternativa geral.</p>
+                <img id="decisionTreeChart" class="expandable-image" src="static/images/decision_tree_alternatives.png" alt="Gráfico da Árvore de Decisão Comparativa">
                 <small>Clique na imagem para expandir.</small>
+            </div>
+
+            <div class="gallery-wrapper">
+                <h3>Galeria de Análises de Suporte</h3>
+                <div class="horizontal-gallery">
+                    <div class="gallery-item">
+                        <img src="static/images/sensibilidade_receita.png" class="expandable-image" alt="Análise de Sensibilidade da Receita">
+                        <div class="gallery-caption">Análise de Sensibilidade</div>
+                    </div>
+                    <div class="gallery-item">
+                        <img src="static/images/arvore_enfardamento.png" class="expandable-image" alt="Árvore de Decisão para Enfardamento">
+                        <div class="gallery-caption">Árvore: Enfardamento</div>
+                    </div>
+                    <div class="gallery-item">
+                        <img src="static/images/arvore_colheita_integral.png" class="expandable-image" alt="Árvore de Decisão para Colheita Integral">
+                        <div class="gallery-caption">Árvore: Colheita Integral</div>
+                    </div>
+                    <div class="gallery-item">
+                        <img src="static/images/arvore_colheita_parcial.png" class="expandable-image" alt="Árvore de Decisão para Colheita Parcial">
+                        <div class="gallery-caption">Árvore: Colheita Parcial</div>
+                    </div>
+                    <div class="gallery-item">
+                        <img src="static/images/quadro_min_max.png" class="expandable-image" alt="Quadro de Valores Mínimos e Máximos">
+                        <div class="gallery-caption">Tabela: Preços Min/Max</div>
+                    </div>
+                </div>
             </div>
         </section>
 
