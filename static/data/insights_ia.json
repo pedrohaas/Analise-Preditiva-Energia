@@ -1,0 +1,9 @@
+{
+    "titulo": "Sumário Executivo: Otimização Operacional e Estratégia de Precificação de Energia",
+    "insights": [
+        "Adotar o método de enfardamento para o recolhimento de palhiço como prioridade estratégica, visando capturar o Valor Monetário Esperado de R$ 13.1 milhões identificado na análise de decisão.",
+        "Implementar o modelo Prophet como ferramenta padrão para a previsão de preços de energia na região Sudeste, garantindo maior acurácia (menor RMSE) para o planejamento financeiro e comercial.",
+        "Utilizar as previsões geradas pelo modelo Prophet para otimizar dinamicamente as decisões de venda de energia, maximizando a receita e o retorno sobre o investimento no recolhimento do palhiço.",
+        "Estabelecer um ciclo de validação contínua do modelo preditivo, incorporando novas variáveis (ex: clima, regulação) para aprimorar a precisão e mitigar riscos de mercado futuros."
+    ]
+}
