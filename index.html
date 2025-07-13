@@ -3,95 +3,95 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Análise Econômica Interativa | Preços de Energia</title>
-
+    <title>Dashboard de Análise Preditiva | Preços de Energia</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
-    
+    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700&family=Poppins:wght@500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="static/style.css">
 </head>
 <body>
     <header>
         <div class="container">
-            <h1>Análise Econômica</h1>
-            <p>Previsão de Preços de Energia e Análise de Cenários</p>
+            <h1>Dashboard de Análise Preditiva</h1>
+            <p>Suporte à Decisão Baseado em Previsões de Preços de Energia</p>
         </div>
     </header>
 
     <main class="container">
-        <section id="intro">
-            <h2>Relatório de Análise Preditiva</h2>
-            <p>Os resultados a seguir apresentam as previsões de preço médio de energia para a região Sudeste, utilizando os modelos Prophet, ARIMA e SARIMA, após o tratamento de outliers na série histórica.</p>
+        <section class="analysis-step">
+            <h2>Passo 1: Preparação e Limpeza dos Dados</h2>
+            <p class="section-intro">
+                A qualidade de uma previsão depende diretamente da qualidade dos dados históricos. O primeiro passo crucial foi identificar e tratar os "outliers" – valores atípicos que podem distorcer a análise. Utilizamos o método IQR (Intervalo Interquartil) para detectar esses pontos e os substituímos pela mediana de seus vizinhos, garantindo uma série temporal mais estável e representativa.
+            </p>
+            <div class="result-card">
+                <h3>Detecção e Tratamento de Outliers (Região Sudeste)</h3>
+                <img id="outliersChart" class="expandable-image" src="static/images/outliers_sudeste.png" alt="Gráfico de Detecção de Outliers">
+                <small>Clique na imagem para expandir.</small>
+            </div>
         </section>
 
-        <section id="results">
+        <section class="analysis-step">
+            <h2>Passo 2: A Escolha dos Modelos Preditivos</h2>
+            <p class="section-intro">
+                Não existe um modelo único que seja perfeito para todas as situações. Por isso, aplicamos três abordagens estatísticas robustas e comparamos seus resultados para obter uma visão mais completa e confiável do futuro.
+            </p>
+            <div class="models-grid">
+                <div class="model-card">
+                    <h4>Prophet</h4>
+                    <p>Desenvolvido pelo Facebook, é excelente para dados com fortes tendências sazonais (anuais, mensais) e feriados. É robusto a dados faltantes e mudanças de tendência.</p>
+                </div>
+                <div class="model-card">
+                    <h4>ARIMA</h4>
+                    <p>Um modelo estatístico clássico para análise de séries temporais. Significa "AutoRegressive Integrated Moving Average" e é ideal para capturar tendências e dependências nos dados.</p>
+                </div>
+                <div class="model-card">
+                    <h4>SARIMA</h4>
+                    <p>Uma evolução do ARIMA, o "Seasonal ARIMA" adiciona um componente para tratar explicitamente da sazonalidade, tornando-o especialmente poderoso para dados como preços de energia.</p>
+                </div>
+            </div>
+        </section>
+        
+        <section class="analysis-step">
+            <h2>Passo 3: Previsões e Análise de Cenários</h2>
+            <p class="section-intro">
+                Com os dados tratados e os modelos definidos, geramos as previsões para os próximos 16 meses. O gráfico e a tabela abaixo apresentam os resultados consolidados, permitindo uma comparação direta entre as diferentes projeções.
+            </p>
             <div class="results-grid">
-                
                 <div class="result-card">
-                    <h3>Detecção e Tratamento de Outliers</h3>
-                    <img id="outliersChart" src="static/images/outliers_sudeste.png" alt="Gráfico de Detecção de Outliers">
+                    <h3>Comparativo de Previsões de Preço</h3>
+                    <img id="forecastChart" class="expandable-image" src="static/images/forecast_sudeste.png" alt="Gráfico de Previsões">
+                    <small>Clique na imagem para expandir.</small>
                 </div>
-                
-                <div class="result-card">
-                    <h3>Previsões de Preço de Energia</h3>
-                    <img id="forecastChart" src="static/images/forecast_sudeste.png" alt="Gráfico de Previsões">
-                </div>
-
                 <div class="result-card full-width">
-                    <h3>Tabela de Previsões (Próximos 16 Meses)</h3>
+                    <h3>Tabela Detalhada (Próximos 16 Meses)</h3>
                     <div class="table-wrapper">
                         <table id="forecastTable">
-                            <thead>
-                                <tr>
-                                    <th>Data</th>
-                                    <th>Prophet</th>
-                                    <th>ARIMA</th>
-                                    <th>SARIMA</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                </tbody>
-                        </table>
+                            </table>
                     </div>
                 </div>
+            </div>
+        </section>
 
+        <section class="analysis-step">
+            <h2>Passo 4: Principais Insights e Conclusões</h2>
+            <div class="insights-card">
+                <ul>
+                    <li><strong>Tendência Geral:</strong> Todos os modelos apontam para uma tendência de alta nos preços médios de energia ao longo do próximo ano, embora com variações em sua intensidade.</li>
+                    <li><strong>Convergência de Modelos:</strong> As previsões dos modelos ARIMA e SARIMA são bastante próximas, o que reforça a confiança na projeção de tendência. O Prophet, embora siga a mesma direção, apresenta uma curva mais suavizada.</li>
+                    <li><strong>Impacto Sazonal:</strong> O modelo SARIMA, que considera a sazonalidade, captura picos e vales que podem estar associados a períodos de maior ou menor demanda de energia (ex: verão vs. inverno), oferecendo uma visão mais granular.</li>
+                    <li><strong>Tomada de Decisão:</strong> Com base nestes dados, decisões estratégicas como a compra de palhiço de cana para geração de energia própria devem considerar o custo de oportunidade frente a um cenário provável de aumento de custos com a energia da rede.</li>
+                </ul>
             </div>
         </section>
     </main>
 
-    <footer>
-    <div class="container footer-content">
-        <div class="footer-section about">
-            <h4>Sobre o Projeto</h4>
-            <p>
-                Este projeto de análise preditiva foi desenvolvido para fins acadêmicos,
-                disponibilizado gratuitamente para a comunidade.
-            </p>
-        </div>
-        <div class="footer-section developers">
-            <h4>Desenvolvedores</h4>
-            <p>
-                <a href="https://www.linkedin.com/in/opedroalves/" target="_blank">Pedro Henrique Alves de Araujo Silva</a>
-            </p>
-            <p>
-                <a href="https://www.linkedin.com/in/laura-rieko-imai/" target="_blank">Laura Rieko Marçal Imai</a>
-            </p>
-        </div>
-        <div class="footer-section links">
-            <h4>Links Úteis</h4>
-            <p>
-                <a href="https://github.com/pedrohaas/T1-TomadaDecisao/tree/main" target="_blank">Código Fonte no GitHub</a>
-            </p>
-            <p>
-                <a href="https://github.com/pedrohaas/T1-TomadaDecisao/blob/main/LICENSE" target="_blank">Licença MIT</a>
-            </p>
-        </div>
+    <div id="lightbox" class="lightbox-overlay">
+        <span class="lightbox-close">&times;</span>
+        <img class="lightbox-content" id="lightbox-img">
     </div>
-    <div class="footer-bottom">
-        <p>Copyright © 2025 | Lançado sob a Licença MIT.</p>
-    </div>
-</footer>
+
+    <footer class="main-footer">
+        </footer>
 
     <script src="static/script.js"></script>
 </body>
