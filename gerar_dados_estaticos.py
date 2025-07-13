@@ -3,6 +3,7 @@ import numpy as np
 from prophet import Prophet
 from statsmodels.tsa.arima.model import ARIMA
 from statsmodels.tsa.statespace.sarimax import SARIMAX
+from statsmodels.tsa.seasonal import STL
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 from scipy import stats
@@ -11,6 +12,7 @@ import json
 import warnings
 
 warnings.filterwarnings('ignore')
+plt.style.use('ggplot')
 
 # --- Funções de Análise (sem alterações) ---
 def tratar_outliers(serie, metodo='iqr', limite=1.5):
@@ -45,7 +47,33 @@ def visualizar_outliers(df_original, df_tratado, region_name):
     plt.grid(True); plt.legend(); plt.tight_layout()
     plt.savefig(filepath); plt.close()
     print(f"Gráfico de outliers salvo em: {filepath}")
+    
+def plotar_decomposicao_stl(serie, region_name):
+    output_dir = "static/images"
+    if not os.path.exists(output_dir): os.makedirs(output_dir)
+    filepath = f"{output_dir}/decomposition_{region_name.lower()}.png"
+    
+    serie_resampled = serie.asfreq('MS')
+    stl = STL(serie_resampled, seasonal=13)
+    resultado = stl.fit()
+    
+    fig, (ax1, ax2, ax3, ax4) = plt.subplots(4, 1, figsize=(12, 10), sharex=True)
+    resultado.observed.plot(ax=ax1, legend=False)
+    ax1.set_ylabel('Observado')
+    resultado.trend.plot(ax=ax2, legend=False)
+    ax2.set_ylabel('Tendência')
+    resultado.seasonal.plot(ax=ax3, legend=False)
+    ax3.set_ylabel('Sazonalidade')
+    resultado.resid.plot(ax=ax4, legend=False)
+    ax4.set_ylabel('Resíduo')
+    
+    fig.suptitle(f'Decomposição da Série Temporal - Região {region_name.upper()}', fontsize=16)
+    plt.tight_layout(rect=[0, 0.03, 1, 0.95])
+    plt.savefig(filepath)
+    plt.close()
+    print(f"Gráfico de decomposição salvo em: {filepath}")
 
+# ##### CORREÇÃO AQUI #####
 def realizar_previsao(df_region, future_dates, region):
     df_tratado_serie = tratar_outliers(df_region[region])
     df_tratado = pd.DataFrame(df_tratado_serie)
@@ -55,11 +83,12 @@ def realizar_previsao(df_region, future_dates, region):
     forecast_prophet = model_prophet.predict(pd.DataFrame({'ds': future_dates}))
     
     model_arima = ARIMA(df_tratado[region], order=(5, 1, 0)).fit()
-    forecast_arima = model_arima.forecast(steps=len(future_dates))
+    forecast_arima = model_arima.forecast(steps=len(future_dates)) # Variável correta
     
     model_sarima = SARIMAX(df_tratado[region], order=(5, 1, 0), seasonal_order=(1, 1, 0, 12)).fit(disp=False)
-    forecast_sarima = model_sarima.forecast(steps=len(future_dates))
+    forecast_sarima = model_sarima.forecast(steps=len(future_dates)) # Variável correta
     
+    # Retornando as variáveis com os nomes corretos
     return forecast_prophet, forecast_arima, forecast_sarima, df_tratado
 
 def plotar_previsoes_futuras(original, tratado, forecasts, future_dates, region):
@@ -70,8 +99,8 @@ def plotar_previsoes_futuras(original, tratado, forecasts, future_dates, region)
     plt.plot(original.iloc[-36:].index, original.iloc[-36:][region], 'o-', label='Histórico (Original)', color='blue', alpha=0.4)
     plt.plot(tratado.iloc[-36:].index, tratado.iloc[-36:][region], 'o-', label='Histórico (Tratado)', color='darkblue')
     plt.plot(future_dates, forecasts['prophet']['yhat'], '--', label='Prophet', color='red')
-    plt.plot(future_dates, forecasts['arima'], '--', label='ARIMA', color='green')
-    plt.plot(future_dates, forecasts['sarima'], '--', label='SARIMA', color='purple')
+    plt.plot(future_dates, forecasts['arima'], '--', label='ARIMA', color='green') # O uso aqui estava correto
+    plt.plot(future_dates, forecasts['sarima'], '--', label='SARIMA', color='purple') # O uso aqui estava correto
     plt.fill_between(future_dates, forecasts['prophet']['yhat_lower'], forecasts['prophet']['yhat_upper'], color='red', alpha=0.2, label='IC Prophet 95%')
     plt.title(f'Previsões de Preço Médio de Energia - Região {region.upper()}', fontsize=16)
     plt.xlabel('Data', fontsize=12); plt.ylabel('Preço Médio (R$)', fontsize=12)
@@ -82,7 +111,6 @@ def plotar_previsoes_futuras(original, tratado, forecasts, future_dates, region)
     plt.savefig(filepath); plt.close()
     print(f"Gráfico de previsões salvo em: {filepath}")
 
-# --- Função Principal para Execução (MODIFICADA) ---
 def main():
     print("Iniciando a geração de dados estáticos para todas as regiões...")
     df_full = pd.read_excel("Historico_do_Preco_Medio_Mensal_-_janeiro_de_2001_a_abril_de_2025.xls")
@@ -98,8 +126,13 @@ def main():
         print(f"\n--- Processando Região: {region} ---")
         df_region = df_full[['MES', region]].dropna().set_index('MES')
         
+        # ##### CORREÇÃO AQUI TAMBÉM #####
+        # Recebendo as variáveis com os nomes corretos
         prophet, arima, sarima, df_tratado = realizar_previsao(df_region, future_dates, region)
         
+        plotar_decomposicao_stl(df_tratado[region], region)
+        
+        # Aqui a atribuição ao dicionário já estava correta, o erro era na etapa anterior
         forecasts = {'prophet': prophet, 'arima': arima, 'sarima': sarima}
 
         visualizar_outliers(df_region, pd.DataFrame(df_tratado[region]), region)
@@ -107,9 +140,9 @@ def main():
 
         forecast_table_data = {
             'Data': future_dates.strftime('%b/%Y').tolist(),
-            'Prophet': [f'R$ {x:.2f}' for x in prophet['yhat']],
-            'ARIMA': [f'R$ {x:.2f}' for x in arima],
-            'SARIMA': [f'R$ {x:.2f}' for x in sarima]
+            'Prophet': prophet['yhat'].tolist(),
+            'ARIMA': arima.tolist(),
+            'SARIMA': sarima.tolist()
         }
         
         json_filepath = f"{data_dir}/forecast_data_{region.lower()}.json"

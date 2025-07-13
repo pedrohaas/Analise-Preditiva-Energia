@@ -29,10 +29,18 @@
         </section>
 
         <section class="analysis-step">
-            <h2 id="outliers-title">Passo 1: Preparação dos Dados (Região Sudeste)</h2>
-            <p class="section-intro">
-                A qualidade de uma previsão depende diretamente da qualidade dos dados históricos. O primeiro passo crucial foi identificar e tratar os "outliers" – valores atípicos que podem distorcer a análise. Utilizamos o método IQR (Intervalo Interquartil) para detectar esses pontos e os substituímos pela mediana de seus vizinhos, garantindo uma série temporal mais estável e representativa.
-            </p>
+            <h2>Passo 1: Entendendo o Comportamento do Preço</h2>
+            <p class="section-intro">Antes de prever, precisamos entender. A análise de decomposição divide a série de preços em seus componentes fundamentais: a <strong>Tendência</strong> de longo prazo, os ciclos de <strong>Sazonalidade</strong> e os <strong>Resíduos</strong> (ruído aleatório).</p>
+            <div class="result-card">
+                <h3 id="decomposition-card-title">Decomposição da Série Temporal</h3>
+                <img id="decompositionChart" class="expandable-image" src="static/images/decomposition_sudeste.png" alt="Gráfico de Decomposição da Série">
+                <small>Clique na imagem para expandir.</small>
+            </div>
+        </section>
+
+        <section class="analysis-step">
+            <h2 id="outliers-title">Passo 2: Preparação e Limpeza dos Dados</h2>
+            <p class="section-intro">Com os padrões identificados, o próximo passo foi tratar os "outliers" – valores atípicos que podem distorcer a análise. Isso garante uma série temporal mais estável e previsões mais confiáveis.</p>
             <div class="result-card">
                 <h3 id="outliers-card-title">Detecção e Tratamento de Outliers</h3>
                 <img id="outliersChart" class="expandable-image" src="static/images/outliers_sudeste.png" alt="Gráfico de Detecção de Outliers">
@@ -41,96 +49,63 @@
         </section>
 
         <section class="analysis-step">
-            <h2>Passo 2: A Escolha dos Modelos Preditivos</h2>
-            <p class="section-intro">
-                Não existe um modelo único que seja perfeito para todas as situações. Por isso, aplicamos três abordagens estatísticas robustas e comparamos seus resultados para obter uma visão mais completa e confiável do futuro.
-            </p>
+            <h2>Passo 3: A Escolha dos Modelos Preditivos</h2>
+            <p class="section-intro">Aplicamos três abordagens estatísticas robustas e comparamos seus resultados para obter uma visão mais completa e confiável do futuro.</p>
             <div class="models-grid">
-                <div class="model-card">
-                    <h4>Prophet</h4>
-                    <p>Desenvolvido pelo Facebook, é excelente para dados com fortes tendências sazonais (anuais, mensais) e feriados. É robusto a dados faltantes e mudanças de tendência.</p>
-                </div>
-                <div class="model-card">
-                    <h4>ARIMA</h4>
-                    <p>Um modelo estatístico clássico para análise de séries temporais. Significa "AutoRegressive Integrated Moving Average" e é ideal para capturar tendências e dependências nos dados.</p>
-                </div>
-                <div class="model-card">
-                    <h4>SARIMA</h4>
-                    <p>Uma evolução do ARIMA, o "Seasonal ARIMA" adiciona um componente para tratar explicitamente da sazonalidade, tornando-o especialmente poderoso para dados como preços de energia.</p>
-                </div>
+                <div class="model-card"><h4>Prophet</h4><p>Desenvolvido pelo Facebook, é excelente para dados com fortes tendências sazonais e feriados. É robusto a dados faltantes e mudanças de tendência.</p></div>
+                <div class="model-card"><h4>ARIMA</h4><p>Um modelo estatístico clássico para análise de séries temporais, ideal para capturar tendências e dependências nos dados.</p></div>
+                <div class="model-card"><h4>SARIMA</h4><p>Uma evolução do ARIMA que adiciona um componente para tratar explicitamente da sazonalidade, tornando-o especialmente poderoso para este tipo de dado.</p></div>
             </div>
         </section>
-        
         <section class="analysis-step">
-            <h2>Passo 3: Previsões e Análise de Cenários</h2>
-            <p class="section-intro">
-                Com os dados tratados e os modelos definidos, geramos as previsões para os próximos 16 meses. O gráfico e a tabela abaixo apresentam os resultados consolidados, permitindo uma comparação direta entre as diferentes projeções.
-            </p>
+            <h2>Passo 4: Previsões e Análise de Cenários</h2>
             <div class="results-grid">
-                <div class="result-card">
-                    <h3>Comparativo de Previsões de Preço</h3>
-                    <img id="forecastChart" class="expandable-image" src="static/images/forecast_sudeste.png" alt="Gráfico de Previsões">
-                    <small>Clique na imagem para expandir.</small>
-                </div>
-                <div class="result-card full-width">
-                    <h3>Tabela Detalhada (Próximos 16 Meses)</h3>
-                    <div class="table-wrapper">
-                        <table id="forecastTable">
-                            </table>
-                    </div>
-                </div>
+                <div class="result-card"><h3>Comparativo de Previsões de Preço</h3><img id="forecastChart" class="expandable-image" src="static/images/forecast_sudeste.png" alt="Gráfico de Previsões"><small>Clique na imagem para expandir.</small></div>
+                <div class="result-card full-width"><h3>Tabela Detalhada (Próximos 16 Meses)</h3><div class="table-wrapper"><table id="forecastTable"></table></div></div>
             </div>
         </section>
 
         <section class="analysis-step">
-            <h2>Passo 4: Principais Insights e Conclusões</h2>
-            <div class="insights-card">
-                <ul>
-                    <li><strong>Tendência Geral:</strong> Todos os modelos apontam para uma tendência de alta nos preços médios de energia ao longo do próximo ano, embora com variações em sua intensidade.</li>
-                    <li><strong>Convergência de Modelos:</strong> As previsões dos modelos ARIMA e SARIMA são bastante próximas, o que reforça a confiança na projeção de tendência. O Prophet, embora siga a mesma direção, apresenta uma curva mais suavizada.</li>
-                    <li><strong>Impacto Sazonal:</strong> O modelo SARIMA, que considera a sazonalidade, captura picos e vales que podem estar associados a períodos de maior ou menor demanda de energia (ex: verão vs. inverno), oferecendo uma visão mais granular.</li>
-                    <li><strong>Tomada de Decisão:</strong> Com base nestes dados, decisões estratégicas como a compra de palhiço de cana para geração de energia própria devem considerar o custo de oportunidade frente a um cenário provável de aumento de custos com a energia da rede.</li>
-                </ul>
+            <h2>Passo 5: Ferramenta de Análise de Investimento</h2>
+            <p class="section-intro">Utilize esta ferramenta para simular o retorno do investimento em uma usina de geração de energia a partir do palhiço de cana, com base nas previsões de preço para a região selecionada.</p>
+            <div class="investment-tool">
+                <div class="investment-inputs">
+                    <div class="input-group">
+                        <label for="investmentCost">Custo do Investimento (R$)</label>
+                        <input type="number" id="investmentCost" value="310000">
+                    </div>
+                    <div class="input-group">
+                        <label for="energyConsumption">Consumo Mensal de Energia (MWh)</label>
+                        <input type="number" id="energyConsumption" value="540">
+                    </div>
+                </div>
+                <div class="investment-results">
+                    <table id="decisionTable">
+                        <thead>
+                            <tr>
+                                <th>Modelo de Previsão</th>
+                                <th>Economia Total em 16 meses</th>
+                                <th>Resultado (Lucro/Prejuízo)</th>
+                                <th>Retorno do Investimento (Payback)</th>
+                                <th>Recomendação</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            </tbody>
+                    </table>
+                </div>
             </div>
         </section>
     </main>
 
-    <div id="lightbox" class="lightbox-overlay">
-        <span class="lightbox-close">&times;</span>
-        <img class="lightbox-content" id="lightbox-img">
-    </div>
-
+    <div id="lightbox" class="lightbox-overlay"><span class="lightbox-close">&times;</span><img class="lightbox-content" id="lightbox-img"></div>
     <footer>
         <div class="container footer-content">
-            <div class="footer-section about">
-                <h4>Sobre o Projeto</h4>
-                <p>
-                    Este projeto de análise preditiva foi desenvolvido para fins acadêmicos,
-                    disponibilizado gratuitamente para a comunidade.
-                </p>
-            </div>
-            <div class="footer-section developers">
-                <h4>Desenvolvedores</h4>
-                <p>
-                    <a href="https://www.linkedin.com/in/opedroalves/" target="_blank">Pedro Henrique Alves de Araujo Silva</a>
-                </p>
-                <p>
-                    <a href="https://www.linkedin.com/in/laura-rieko-imai/" target="_blank">Laura Rieko Marçal Imai</a>
-                </p>
-            </div>
-            <div class="footer-section links">
-                <h4>Links Úteis</h4>
-                <p>
-                    <a href="https://github.com/pedrohaas/T1-TomadaDecisao/tree/main" target="_blank">Código Fonte no GitHub</a>
-                </p>
-                <p>
-                    <a href="https://github.com/pedrohaas/T1-TomadaDecisao/blob/main/LICENSE" target="_blank">Licença MIT</a>
-                </p>
-            </div>
+            <div class="footer-section about"><h4>Sobre o Projeto</h4><p>Este projeto de análise preditiva foi desenvolvido para fins acadêmicos, disponibilizado gratuitamente para a comunidade.</p></div>
+            <div class="footer-section developers"><h4>Desenvolvedores</h4><p><a href="https://www.linkedin.com/in/opedroalves/" target="_blank">Pedro Henrique Alves de Araujo Silva</a></p><p><a href="https://www.linkedin.com/in/laura-rieko-imai/" target="_blank">Laura Rieko Marçal Imai</a></p></div>
+            <div class="footer-section links"><h4>Links Úteis</h4><p><a href="https://github.com/pedrohaas/T1-TomadaDecisao/tree/main" target="_blank">Código Fonte no GitHub</a></p><p><a href="https://github.com/pedrohaas/T1-TomadaDecisao/blob/main/LICENSE" target="_blank">Licença MIT</a></p></div>
         </div>
-        <div class="footer-bottom">
-            <p>Copyright © 2025 | Lançado sob a Licença MIT.</p>
-        </div>
+        <div class="footer-bottom"><p>Copyright © 2025 | Lançado sob a Licença MIT.</p></div>
     </footer>
 
     <script src="static/script.js"></script>

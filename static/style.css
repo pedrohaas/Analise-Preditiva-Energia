@@ -138,3 +138,66 @@ footer { background-color: #343a40; color: #e9ecef; padding-top: 3rem; padding-b
     border-color: var(--primary-color);
     transform: scale(1.05);
 }
+
+/* --- 10. Estilos para a Ferramenta de Análise de Investimento --- */
+
+.investment-tool {
+    background: var(--card-background);
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+}
+
+.investment-inputs {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    flex-wrap: wrap;
+    margin-bottom: 2.5rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.input-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.input-group label {
+    font-family: var(--font-heading);
+    margin-bottom: 0.5rem;
+    color: var(--heading-color);
+}
+
+.input-group input {
+    font-size: 1.1rem;
+    padding: 0.8rem;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    width: 250px;
+}
+
+#decisionTable {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+#decisionTable th, #decisionTable td {
+    text-align: center;
+    padding: 1rem;
+}
+
+.recommendation {
+    padding: 0.5rem 1rem;
+    border-radius: 50px;
+    color: white;
+    font-weight: bold;
+}
+
+.recommendation.invest {
+    background-color: var(--secondary-color);
+}
+
+.recommendation.no-invest {
+    background-color: #e63946; /* Cor vermelha para "Não Investir" */
+}
